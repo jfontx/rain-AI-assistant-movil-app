@@ -7,7 +7,7 @@ Asistente personal multi-agente con IA local (Ollama/llama3.2), gestión financi
 | Capa | Tecnología |
 |------|-----------|
 | Backend | Python 3.11 + FastAPI + Uvicorn |
-| ORM / DB | SQLModel (SQLAlchemy + Pydantic) + SQLite |
+| ORM / DB | SQLModel + PostgreSQL (Supabase) + Autenticación |
 | IA local | Ollama `llama3.2` en `localhost:11434` |
 | Correos | `imap-tools` + Gmail App Password |
 | App móvil | React Native + Expo SDK 54 (Expo Go) |
@@ -17,22 +17,22 @@ Asistente personal multi-agente con IA local (Ollama/llama3.2), gestión financi
 
 ## Estructura del proyecto
 
-```
-rain/                          ← Proyecto Expo (ya existente)
-├── App.tsx                    ← Navegación por 4 tabs
+rain/                          ← Proyecto Expo
+├── App.tsx                    ← Navegación por 5 tabs (Inicio, Finanzas, Cuentas, Tareas, Calendario)
 ├── screens/
-│   ├── ChatScreen.tsx         ← Chat + TTS (pantalla principal)
-│   ├── FinanzasScreen.tsx     ← CRUD transacciones + balance
-│   ├── TareasScreen.tsx       ← CRUD tareas con checkbox
-│   └── CalendarioScreen.tsx   ← Eventos agrupados por día
+│   ├── InicioScreen.tsx       ← Dashboard resumen y Chat IA
+│   ├── FinanzasScreen.tsx     ← Ingresos, gastos y tarjetas
+│   ├── ObligacionesScreen.tsx ← Préstamos, deudas y gastos fijos
+│   ├── TareasScreen.tsx       ← CRUD tareas
+│   └── CalendarioScreen.tsx   ← Eventos y agenda
 ├── services/
 │   └── api.ts                 ← Todas las llamadas HTTP al backend
 ├── backend/                   ← Backend Python (nuevo)
 │   ├── app/
 │   │   ├── main.py            ← FastAPI + CORS + lifespan
 │   │   ├── db/
-│   │   │   ├── models.py      ← SQLModel: 5 tablas
-│   │   │   └── session.py     ← Engine SQLite + get_session
+│   │   │   ├── models.py      ← SQLModel: 8 tablas multi-usuario
+│   │   │   └── session.py     ← Conexión PostgreSQL (Supabase)
 │   │   ├── llm/
 │   │   │   ├── ollama_client.py ← Cliente async Ollama
 │   │   │   └── tools_schema.py  ← Definición de 10 herramientas
@@ -48,7 +48,9 @@ rain/                          ← Proyecto Expo (ya existente)
 │   │       ├── metas.py
 │   │       ├── tarjetas.py
 │   │       ├── asistente.py   ← POST /api/asistente/mensaje
-│   │       └── webhook.py     ← POST /api/webhook/transaccion-bancaria
+│   │       ├── auth.py        ← POST /api/auth/login, /api/auth/register
+│   │       ├── webhooks.py    ← POST /api/webhooks/bancos (email)
+│   │       └── webhook.py     ← POST /api/webhook/transaccion-bancaria (SMS)
 │   ├── requirements.txt
 │   ├── .env.example
 │   └── README.md              ← Instrucciones detalladas del backend
