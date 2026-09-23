@@ -8,10 +8,10 @@ import logging
 from datetime import datetime
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 from app.llm.ollama_client import chat_with_tools
-from app.db.models import Transaccion, TipoTransaccion, Origen
+from app.db.models import Transaccion, TipoTransaccion, Origen, Usuario
 from app.db.session import engine
 
 logger = logging.getLogger(__name__)
@@ -97,7 +97,11 @@ async def recibir_transaccion_bancaria(notificacion: NotificacionBancaria):
 
     # Crear transacción en la base de datos
     with Session(engine) as session:
+        usuario = session.exec(select(Usuario)).first()
+        usuario_id = usuario.id if usuario else 1
+
         transaccion = Transaccion(
+            usuario_id=usuario_id,
             tipo=TipoTransaccion.gasto,  # las notificaciones bancarias siempre son gastos
             monto=float(datos.get("monto", 0)),
             moneda=datos.get("moneda", "COP"),
