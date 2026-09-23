@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import {
-  View, Text, SectionList, TouchableOpacity, TextInput,
+  View, Text, FlatList, TouchableOpacity, TextInput,
   StyleSheet, Alert, SafeAreaView, RefreshControl, Modal, Keyboard, TouchableWithoutFeedback, KeyboardAvoidingView, Platform
 } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
@@ -11,15 +11,31 @@ import { obtenerEventos, crearEvento, Evento } from '../services/api';
 import { Calendar, Clock, CheckCircle2, ListTodo, Plus } from 'lucide-react-native';
 import { theme } from '../theme';
 
-const formatearDia = (iso: string) => {
-  const d = new Date(iso);
-  const hoy = new Date();
-  const manana = new Date(hoy);
-  manana.setDate(hoy.getDate() + 1);
+const getFormatDate = (date: Date) => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+};
 
-  if (d.toDateString() === hoy.toDateString()) return 'Hoy';
-  if (d.toDateString() === manana.toDateString()) return 'Mañana';
-  return d.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' });
+const getDayName = (date: Date) => {
+  return date.toLocaleDateString('es-CO', { weekday: 'short' }).substring(0, 3);
+};
+
+const generarFechas = () => {
+  const fechas = [];
+  const hoy = new Date();
+  for (let i = -7; i <= 30; i++) {
+    const d = new Date(hoy);
+    d.setDate(hoy.getDate() + i);
+    fechas.push({
+      date: d,
+      fechaStr: getFormatDate(d),
+      diaSemana: getDayName(d),
+      diaMes: d.getDate()
+    });
+  }
+  return fechas;
 };
 
 const formatearHora = (iso: string) =>
@@ -31,30 +47,28 @@ const ESTADO_COLOR: Record<string, string> = {
   completado: staticTheme.colors.secondary,
 };
 
-type Seccion = { title: string; data: Evento[] };
-
-function agruparPorDia(eventos: Evento[]): Seccion[] {
-  const grupos: Record<string, Evento[]> = {};
-  for (const evento of eventos) {
-    const clave = new Date(evento.fecha_inicio).toDateString();
-    if (!grupos[clave]) grupos[clave] = [];
-    grupos[clave].push(evento);
-  }
-  return Object.entries(grupos)
-    .sort(([a], [b]) => new Date(a).getTime() - new Date(b).getTime())
-    .map(([, evts]) => ({
-      title: formatearDia(evts[0].fecha_inicio),
-      data: evts,
-    }));
-}
+const FECHAS_CALENDARIO = generarFechas();
 
 export default function CalendarioScreen() {
   const { theme } = useTheme();
   const styles = createStyles(theme);
-  const [secciones, setSecciones] = useState<Seccion[]>([]);
+  const [eventos, setEventos] = useState<Evento[]>([]);
+  const [fechaSeleccionada, setFechaSeleccionada] = useState(getFormatDate(new Date()));
   const [cargando, setCargando] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [form, setForm] = useState({ titulo: '', categoria: '', fecha_inicio: '', fecha_fin: '', notas: '' });
+
+  const flatListRef = React.useRef<FlatList>(null);
+
+  useEffect(() => {
+    // Scroll inicial para centrar el día de hoy
+    setTimeout(() => {
+      const index = FECHAS_CALENDARIO.findIndex(f => f.fechaStr === getFormatDate(new Date()));
+      if (index !== -1 && flatListRef.current) {
+        flatListRef.current.scrollToIndex({ index, animated: true, viewPosition: 0.5 });
+      }
+    }, 500);
+  }, []);
 
   const guardarEvento = async () => {
     if (!form.titulo || !form.fecha_inicio) {
@@ -82,7 +96,7 @@ export default function CalendarioScreen() {
     setCargando(true);
     try {
       const datos = await obtenerEventos();
-      setSecciones(agruparPorDia(datos));
+      setEventos(datos.sort((a, b) => new Date(a.fecha_inicio).getTime() - new Date(b.fecha_inicio).getTime()));
     } catch {
       Alert.alert('Error', 'No se pudo conectar al backend.');
     } finally {
@@ -111,22 +125,51 @@ export default function CalendarioScreen() {
         </View>
       </View>
 
-      <SectionList
-        sections={secciones}
+      <View style={styles.selectorFechasContainer}>
+        <FlatList
+          ref={flatListRef}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          data={FECHAS_CALENDARIO}
+          keyExtractor={item => item.fechaStr}
+          contentContainerStyle={{ paddingHorizontal: theme.spacing.margin, gap: 12, paddingBottom: 16 }}
+          getItemLayout={(data, index) => ({ length: 60, offset: 72 * index, index })}
+          renderItem={({ item }) => {
+            const isSelected = item.fechaStr === fechaSeleccionada;
+            const isToday = item.fechaStr === getFormatDate(new Date());
+            return (
+              <TouchableOpacity
+                style={[styles.diaContenedor, isSelected && styles.diaContenedorSeleccionado]}
+                onPress={() => {
+                  setFechaSeleccionada(item.fechaStr);
+                  const idx = FECHAS_CALENDARIO.findIndex(f => f.fechaStr === item.fechaStr);
+                  flatListRef.current?.scrollToIndex({ index: idx, animated: true, viewPosition: 0.5 });
+                }}
+              >
+                <Text style={[styles.diaTextoSemana, isSelected && styles.diaTextoSeleccionado]}>
+                  {isToday ? 'HOY' : item.diaSemana.toUpperCase()}
+                </Text>
+                <Text style={[styles.diaTextoMes, isSelected && styles.diaTextoSeleccionado]}>
+                  {item.diaMes}
+                </Text>
+                {isSelected && <View style={styles.puntoIndicador} />}
+              </TouchableOpacity>
+            );
+          }}
+        />
+      </View>
+
+      <FlatList
+        data={eventos.filter(e => getFormatDate(new Date(e.fecha_inicio)) === fechaSeleccionada)}
         keyExtractor={item => String(item.id)}
         refreshControl={<RefreshControl refreshing={cargando} onRefresh={cargarEventos} tintColor={theme.colors.primary} />}
         contentContainerStyle={styles.lista}
         ListEmptyComponent={
           <View style={styles.vacioContenedor}>
             <Calendar size={48} color={theme.colors.outline} style={{ marginBottom: theme.spacing.md }} />
-            <Text style={styles.textoVacio}>No tienes eventos próximos.{'\n'}Habla con Raín para crear uno.</Text>
+            <Text style={styles.textoVacio}>No tienes eventos para este día.{'\n'}Habla con Raín para agendar algo.</Text>
           </View>
         }
-        renderSectionHeader={({ section: { title } }) => (
-          <View style={styles.seccionHeader}>
-            <Text style={styles.seccionTitulo}>{title}</Text>
-          </View>
-        )}
         renderItem={({ item }) => (
           <View style={[styles.tarjeta, item.estado === 'completado' && styles.tarjetaCompletada]}>
             <View style={styles.horaContainer}>
@@ -161,7 +204,6 @@ export default function CalendarioScreen() {
             </View>
           </View>
         )}
-        stickySectionHeadersEnabled
       />
 
       {/* Modal crear evento */}
@@ -211,8 +253,13 @@ const createStyles = (theme: any) => StyleSheet.create({
   vacioContenedor: { alignItems: 'center', marginTop: 80 },
   textoVacio: { fontFamily: theme.typography.fontFamily.regular, textAlign: 'center', color: theme.colors.outline, fontSize: theme.typography.bodyMd.fontSize, lineHeight: 24 },
   
-  seccionHeader: { backgroundColor: theme.colors.background, paddingVertical: theme.spacing.sm, marginBottom: theme.spacing.xs },
-  seccionTitulo: { fontFamily: theme.typography.fontFamily.bold, color: theme.colors.primary, fontSize: theme.typography.headlineMd.fontSize, textTransform: 'capitalize' },
+  selectorFechasContainer: { backgroundColor: theme.colors.surface, borderBottomWidth: 1, borderBottomColor: theme.colors.surfaceVariant, paddingTop: 10 },
+  diaContenedor: { alignItems: 'center', justifyContent: 'center', width: 60, height: 75, borderRadius: 20, backgroundColor: theme.colors.surfaceVariant },
+  diaContenedorSeleccionado: { backgroundColor: theme.colors.primary },
+  diaTextoSemana: { fontFamily: theme.typography.fontFamily.medium, fontSize: 11, color: theme.colors.onSurfaceVariant, marginBottom: 4 },
+  diaTextoMes: { fontFamily: theme.typography.fontFamily.bold, fontSize: 18, color: theme.colors.onSurface },
+  diaTextoSeleccionado: { color: theme.colors.onPrimary },
+  puntoIndicador: { width: 4, height: 4, borderRadius: 2, backgroundColor: theme.colors.onPrimary, position: 'absolute', bottom: 10 },
   
   tarjeta: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: theme.spacing.md, gap: theme.spacing.md },
   tarjetaCompletada: { opacity: 0.5 },

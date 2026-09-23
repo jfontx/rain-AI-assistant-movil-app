@@ -25,6 +25,7 @@ import {
   MetaAhorro
 } from '../services/api';
 import { Wallet, ArrowDownCircle, ArrowUpCircle, Target, Plus } from 'lucide-react-native';
+import { formatearMontoInput, limpiarMonto } from '../utils/moneda';
 
 const CATEGORIAS = ['alimentación', 'transporte', 'servicios', 'educación', 'ocio', 'salud', 'vivienda', 'ropa', 'tecnología', 'otro'];
 
@@ -91,7 +92,7 @@ export default function FinanzasScreen() {
     try {
       await crearTransaccion({
         tipo: form.tipo as 'ingreso' | 'gasto',
-        monto: parseFloat(form.monto),
+        monto: parseFloat(limpiarMonto(form.monto)),
         descripcion: form.descripcion,
         categoria: form.categoria,
         comercio: form.comercio || undefined,
@@ -114,7 +115,7 @@ export default function FinanzasScreen() {
     try {
       await crearMeta({
         nombre: formMeta.nombre,
-        monto_objetivo: parseFloat(formMeta.monto_objetivo),
+        monto_objetivo: parseFloat(limpiarMonto(formMeta.monto_objetivo)),
       });
       setModalMetaVisible(false);
       setFormMeta({ nombre: '', monto_objetivo: '' });
@@ -250,7 +251,7 @@ export default function FinanzasScreen() {
               placeholderTextColor={theme.colors.outline}
               keyboardType="numeric"
               value={form.monto}
-              onChangeText={v => setForm(f => ({ ...f, monto: v }))}
+              onChangeText={v => setForm(f => ({ ...f, monto: formatearMontoInput(v) }))}
             />
             <TextInput
               style={styles.inputModal}
@@ -311,7 +312,7 @@ export default function FinanzasScreen() {
               placeholderTextColor={theme.colors.outline}
               keyboardType="numeric"
               value={formMeta.monto_objetivo}
-              onChangeText={v => setFormMeta(f => ({ ...f, monto_objetivo: v }))}
+              onChangeText={v => setFormMeta(f => ({ ...f, monto_objetivo: formatearMontoInput(v) }))}
             />
 
             <View style={styles.filaBotones}>
