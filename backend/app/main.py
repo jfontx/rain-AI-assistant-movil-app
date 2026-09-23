@@ -23,6 +23,7 @@ from app.routes import (
     webhook,
     prestamos,
     gastos_fijos,
+    auth,
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -67,6 +68,7 @@ app.include_router(asistente.router)
 app.include_router(webhook.router)
 app.include_router(prestamos.router)
 app.include_router(gastos_fijos.router)
+app.include_router(auth.router)
 
 
 # ─────────────────────────────────────────────────

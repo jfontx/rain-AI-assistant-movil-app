@@ -10,7 +10,7 @@ from app.db.models import Evento, TipoEvento, Prioridad, EstadoEvento, Origen, C
 from app.db.session import engine
 
 
-def crear_tarea(
+def crear_tarea(usuario_id: int,
     titulo: str,
     fecha_limite: str,
     prioridad: str = "media",
@@ -23,7 +23,7 @@ def crear_tarea(
     Retorna los datos de la tarea creada.
     """
     with Session(engine) as session:
-        evento = Evento(
+        evento = Evento(usuario_id=usuario_id, 
             titulo=titulo,
             tipo=TipoEvento.tarea,
             categoria=categoria,
@@ -46,7 +46,7 @@ def crear_tarea(
         }
 
 
-def consultar_eventos(
+def consultar_eventos(usuario_id: int,
     fecha_desde: Optional[str] = None,
     fecha_hasta: Optional[str] = None,
     tipo: Optional[str] = None,
@@ -57,7 +57,7 @@ def consultar_eventos(
     Opcionalmente filtra por tipo ('tarea' o 'evento').
     """
     with Session(engine) as session:
-        query = select(Evento)
+        query = select(Evento).where(Evento.usuario_id == usuario_id)
 
         ahora = datetime.now()
         if fecha_desde:
@@ -88,7 +88,7 @@ def consultar_eventos(
         ]
 
 
-def mover_evento(evento_id: int, nueva_fecha: str) -> dict:
+def mover_evento(usuario_id: int, evento_id: int, nueva_fecha: str) -> dict:
     """
     Cambia la fecha_inicio de un evento existente.
     nueva_fecha debe ser un string ISO 8601.
@@ -110,7 +110,7 @@ def mover_evento(evento_id: int, nueva_fecha: str) -> dict:
         }
 
 
-def marcar_completado(evento_id: int) -> dict:
+def marcar_completado(usuario_id: int, evento_id: int) -> dict:
     """
     Marca una tarea/evento como completado.
     """
@@ -131,12 +131,12 @@ def marcar_completado(evento_id: int) -> dict:
         }
 
 
-def resumir_correos_urgentes() -> list:
+def resumir_correos_urgentes(usuario_id: int) -> list:
     """
     Retorna todos los correos marcados como urgentes y no leídos.
     """
     with Session(engine) as session:
-        query = select(Correo).where(
+        query = select(Correo).where(Correo.usuario_id == usuario_id).where(
             Correo.urgente == True,
             Correo.leido == False,
         ).order_by(Correo.fecha_recibido.desc())
@@ -153,7 +153,7 @@ def resumir_correos_urgentes() -> list:
             for c in correos
         ]
 
-def redactar_borrador(destinatario: str, asunto: str, cuerpo: str) -> dict:
+def redactar_borrador(usuario_id: int, destinatario: str, asunto: str, cuerpo: str) -> dict:
     """
     Guarda un borrador de correo en la base de datos para revisión posterior.
     """
@@ -168,7 +168,7 @@ def redactar_borrador(destinatario: str, asunto: str, cuerpo: str) -> dict:
         "mensaje": f"Borrador guardado para {destinatario}. Confirma si deseas enviarlo."
     }
 
-def enviar_correo(destinatario: str, asunto: str, cuerpo: str) -> dict:
+def enviar_correo(usuario_id: int, destinatario: str, asunto: str, cuerpo: str) -> dict:
     """
     Envía un correo electrónico usando SMTP (Gmail).
     """

@@ -54,7 +54,7 @@ REGLAS IMPORTANTES:
 2. Cuando el usuario pida registrar un gasto/ingreso, SIEMPRE usa la herramienta registrar_transaccion.
 3. Cuando necesites información de la base de datos, usa las herramientas disponibles.
 4. Confirma las acciones realizadas con un mensaje claro y amigable.
-5. Si el usuario no especifica moneda, asume COP (pesos colombianos).
+5. La moneda es SIEMPRE pesos colombianos. Cuando menciones montos, di "pesos" (ej: "50,000 pesos"). NUNCA digas "dólares", "USD", "dollars" ni uses el símbolo "$" seguido de "USD". Solo usa "$" como símbolo de pesos colombianos.
 6. Para fechas, calcula la fecha concreta.
 7. NUNCA inventes eventos ni tareas. Si la herramienta consultar_eventos retorna vacío, dile al usuario explícitamente que no tiene nada programado.
 8. CORREOS: NUNCA inventes los destinatarios, asuntos ni cuerpos de correo. Si falta información para enviar, PREGÚNTALE primero ("¿A qué correo y qué le digo?").
@@ -63,7 +63,7 @@ REGLAS IMPORTANTES:
 """
 
 
-async def procesar_mensaje(texto_usuario: str) -> str:
+async def procesar_mensaje(texto_usuario: str, usuario_id: int) -> str:
     """
     Procesa el mensaje del usuario con function calling de Ollama.
 
@@ -123,6 +123,9 @@ async def procesar_mensaje(texto_usuario: str) -> str:
         if isinstance(argumentos, dict) and "parameters" in argumentos and "type" in argumentos:
             argumentos = argumentos["parameters"]
 
+        # Inyectar el usuario_id de forma transparente para la función
+        argumentos["usuario_id"] = usuario_id
+
         logger.info(f"Ejecutando herramienta: {nombre_funcion} con args: {argumentos}")
 
         funcion = FUNCIONES_DISPONIBLES.get(nombre_funcion)
@@ -166,6 +169,9 @@ async def procesar_mensaje(texto_usuario: str) -> str:
             
             if isinstance(argumentos, dict) and "parameters" in argumentos and "type" in argumentos:
                 argumentos = argumentos["parameters"]
+                
+            argumentos["usuario_id"] = usuario_id
+            
             funcion = FUNCIONES_DISPONIBLES.get(nombre_funcion)
             if funcion:
                 try:

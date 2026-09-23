@@ -8,6 +8,8 @@ from datetime import datetime
 
 from app.db.models import Evento, TipoEvento, EstadoEvento, Prioridad, Origen
 from app.db.session import get_session
+from app.core.deps import get_current_user
+from app.db.models import Usuario
 
 router = APIRouter(prefix="/api/eventos", tags=["Eventos"])
 
@@ -26,10 +28,10 @@ class EventoCreate(SQLModel):
 def listar_eventos(
     tipo: Optional[TipoEvento] = None,
     estado: Optional[EstadoEvento] = None,
-    session: Session = Depends(get_session),
+    session: Session = Depends(get_session), current_user: Usuario = Depends(get_current_user),
 ):
     """Lista todos los eventos, filtrables por tipo y estado."""
-    query = select(Evento)
+    query = select(Evento).where(Evento.usuario_id == current_user.id)
     if tipo:
         query = query.where(Evento.tipo == tipo)
     if estado:
@@ -39,18 +41,18 @@ def listar_eventos(
 
 
 @router.get("/{evento_id}", response_model=Evento)
-def obtener_evento(evento_id: int, session: Session = Depends(get_session)):
+def obtener_evento(evento_id: int, session: Session = Depends(get_session), current_user: Usuario = Depends(get_current_user)):
     """Obtiene un evento por ID."""
     evento = session.get(Evento, evento_id)
-    if not evento:
+    if not evento or evento.usuario_id != current_user.id:
         raise HTTPException(status_code=404, detail="Evento no encontrado")
     return evento
 
 
 @router.post("/", response_model=Evento, status_code=201)
-def crear_evento(datos: EventoCreate, session: Session = Depends(get_session)):
+def crear_evento(datos: EventoCreate, session: Session = Depends(get_session), current_user: Usuario = Depends(get_current_user)):
     """Crea un nuevo evento o tarea."""
-    evento = Evento(**datos.model_dump())
+    evento = Evento(**datos.model_dump(), usuario_id=current_user.id)
     evento.id = None
     session.add(evento)
     session.commit()
@@ -62,11 +64,11 @@ def crear_evento(datos: EventoCreate, session: Session = Depends(get_session)):
 def actualizar_evento(
     evento_id: int,
     datos: Evento,
-    session: Session = Depends(get_session),
+    session: Session = Depends(get_session), current_user: Usuario = Depends(get_current_user),
 ):
     """Actualiza los campos de un evento existente."""
     evento = session.get(Evento, evento_id)
-    if not evento:
+    if not evento or evento.usuario_id != current_user.id:
         raise HTTPException(status_code=404, detail="Evento no encontrado")
 
     datos_dict = datos.model_dump(exclude_unset=True, exclude={"id"})
@@ -80,10 +82,10 @@ def actualizar_evento(
 
 
 @router.delete("/{evento_id}", status_code=204)
-def eliminar_evento(evento_id: int, session: Session = Depends(get_session)):
+def eliminar_evento(evento_id: int, session: Session = Depends(get_session), current_user: Usuario = Depends(get_current_user)):
     """Elimina un evento por ID."""
     evento = session.get(Evento, evento_id)
-    if not evento:
+    if not evento or evento.usuario_id != current_user.id:
         raise HTTPException(status_code=404, detail="Evento no encontrado")
     session.delete(evento)
     session.commit()

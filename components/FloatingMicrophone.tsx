@@ -2,9 +2,11 @@ import React from 'react';
 import { TouchableOpacity, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Mic } from 'lucide-react-native';
-import { theme } from '../theme';
+import { useTheme } from '../context/ThemeContext';
 
 export default function FloatingMicrophone() {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   const navigation = useNavigation<any>();
 
   return (
@@ -18,7 +20,7 @@ export default function FloatingMicrophone() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   fab: {
     position: 'absolute',
     bottom: theme.spacing.xl,

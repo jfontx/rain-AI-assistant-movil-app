@@ -7,6 +7,8 @@ from typing import List
 
 from app.db.models import GastoFijo
 from app.db.session import get_session
+from app.core.deps import get_current_user
+from app.db.models import Usuario
 
 router = APIRouter(prefix="/api/gastos-fijos", tags=["Gastos Fijos"])
 
@@ -19,24 +21,24 @@ class GastoFijoCreate(SQLModel):
 
 
 @router.get("/", response_model=List[GastoFijo])
-def listar_gastos_fijos(session: Session = Depends(get_session)):
+def listar_gastos_fijos(session: Session = Depends(get_session), current_user: Usuario = Depends(get_current_user)):
     """Lista todos los gastos fijos."""
-    return session.exec(select(GastoFijo)).all()
+    return session.exec(select(GastoFijo).where(GastoFijo.usuario_id == current_user.id)).all()
 
 
 @router.get("/{gasto_id}", response_model=GastoFijo)
-def obtener_gasto_fijo(gasto_id: int, session: Session = Depends(get_session)):
+def obtener_gasto_fijo(gasto_id: int, session: Session = Depends(get_session), current_user: Usuario = Depends(get_current_user)):
     """Obtiene un gasto fijo por ID."""
     gasto = session.get(GastoFijo, gasto_id)
-    if not gasto:
+    if not gasto or gasto.usuario_id != current_user.id:
         raise HTTPException(status_code=404, detail="Gasto fijo no encontrado")
     return gasto
 
 
 @router.post("/", response_model=GastoFijo, status_code=201)
-def crear_gasto_fijo(datos: GastoFijoCreate, session: Session = Depends(get_session)):
+def crear_gasto_fijo(datos: GastoFijoCreate, session: Session = Depends(get_session), current_user: Usuario = Depends(get_current_user)):
     """Registra un nuevo gasto fijo."""
-    gasto = GastoFijo(**datos.model_dump())
+    gasto = GastoFijo(**datos.model_dump(), usuario_id=current_user.id)
     gasto.id = None
     session.add(gasto)
     session.commit()
@@ -48,11 +50,11 @@ def crear_gasto_fijo(datos: GastoFijoCreate, session: Session = Depends(get_sess
 def actualizar_gasto_fijo(
     gasto_id: int,
     datos: GastoFijo,
-    session: Session = Depends(get_session),
+    session: Session = Depends(get_session), current_user: Usuario = Depends(get_current_user),
 ):
     """Actualiza los datos de un gasto fijo."""
     gasto = session.get(GastoFijo, gasto_id)
-    if not gasto:
+    if not gasto or gasto.usuario_id != current_user.id:
         raise HTTPException(status_code=404, detail="Gasto fijo no encontrado")
 
     datos_dict = datos.model_dump(exclude_unset=True, exclude={"id"})
@@ -66,10 +68,10 @@ def actualizar_gasto_fijo(
 
 
 @router.delete("/{gasto_id}", status_code=204)
-def eliminar_gasto_fijo(gasto_id: int, session: Session = Depends(get_session)):
+def eliminar_gasto_fijo(gasto_id: int, session: Session = Depends(get_session), current_user: Usuario = Depends(get_current_user)):
     """Elimina un gasto fijo."""
     gasto = session.get(GastoFijo, gasto_id)
-    if not gasto:
+    if not gasto or gasto.usuario_id != current_user.id:
         raise HTTPException(status_code=404, detail="Gasto fijo no encontrado")
     session.delete(gasto)
     session.commit()

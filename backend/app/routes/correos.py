@@ -7,6 +7,8 @@ from typing import List
 
 from app.db.models import Correo
 from app.db.session import get_session
+from app.core.deps import get_current_user
+from app.db.models import Usuario
 
 router = APIRouter(prefix="/api/correos", tags=["Correos"])
 
@@ -15,10 +17,10 @@ router = APIRouter(prefix="/api/correos", tags=["Correos"])
 def listar_correos(
     solo_urgentes: bool = False,
     no_leidos: bool = False,
-    session: Session = Depends(get_session),
+    session: Session = Depends(get_session), current_user: Usuario = Depends(get_current_user),
 ):
     """Lista correos procesados por el agente IMAP."""
-    query = select(Correo)
+    query = select(Correo).where(Correo.usuario_id == current_user.id)
     if solo_urgentes:
         query = query.where(Correo.urgente == True)
     if no_leidos:
@@ -28,19 +30,19 @@ def listar_correos(
 
 
 @router.get("/{correo_id}", response_model=Correo)
-def obtener_correo(correo_id: int, session: Session = Depends(get_session)):
+def obtener_correo(correo_id: int, session: Session = Depends(get_session), current_user: Usuario = Depends(get_current_user)):
     """Obtiene un correo por ID."""
     correo = session.get(Correo, correo_id)
-    if not correo:
+    if not correo or correo.usuario_id != current_user.id:
         raise HTTPException(status_code=404, detail="Correo no encontrado")
     return correo
 
 
 @router.put("/{correo_id}/leido", response_model=Correo)
-def marcar_leido(correo_id: int, session: Session = Depends(get_session)):
+def marcar_leido(correo_id: int, session: Session = Depends(get_session), current_user: Usuario = Depends(get_current_user)):
     """Marca un correo como leído."""
     correo = session.get(Correo, correo_id)
-    if not correo:
+    if not correo or correo.usuario_id != current_user.id:
         raise HTTPException(status_code=404, detail="Correo no encontrado")
     correo.leido = True
     session.add(correo)

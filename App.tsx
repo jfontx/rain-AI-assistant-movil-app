@@ -25,12 +25,18 @@ import ObligacionesScreen from './screens/ObligacionesScreen';
 import ChatScreen from './screens/ChatScreen';
 import { ErrorBoundary } from './ErrorBoundary';
 
-import { theme } from './theme';
+import { AuthProvider, AuthContext } from './context/AuthContext';
+import { ThemeProvider, useTheme } from './context/ThemeContext';
+import LoginScreen from './screens/LoginScreen';
+import RegistroScreen from './screens/RegistroScreen';
+import ConfiguracionScreen from './screens/ConfiguracionScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
 function MainTabs() {
+  const { theme } = useTheme();
+  
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -69,6 +75,49 @@ function MainTabs() {
   );
 }
 
+function AuthStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen name="Registro" component={RegistroScreen} />
+    </Stack.Navigator>
+  );
+}
+
+function RootNavigator() {
+  const { usuario, cargando } = React.useContext(AuthContext);
+
+  if (cargando) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#5B5CEB" />
+      </View>
+    );
+  }
+
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      {usuario ? (
+        <>
+          <Stack.Screen name="Main" component={MainTabs} />
+          <Stack.Screen 
+            name="Chat" 
+            component={ChatScreen} 
+            options={{ presentation: 'modal' }}
+          />
+          <Stack.Screen
+            name="Configuracion"
+            component={ConfiguracionScreen}
+            options={{ presentation: 'modal' }}
+          />
+        </>
+      ) : (
+        <Stack.Screen name="Auth" component={AuthStack} />
+      )}
+    </Stack.Navigator>
+  );
+}
+
 export default function App() {
   const [fontsLoaded] = useFonts({
     PlusJakartaSans_400Regular,
@@ -87,17 +136,14 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-      <NavigationContainer>
-        <StatusBar style="dark" />
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="Main" component={MainTabs} />
-          <Stack.Screen 
-            name="Chat" 
-            component={ChatScreen} 
-            options={{ presentation: 'modal' }}
-          />
-        </Stack.Navigator>
-      </NavigationContainer>
+      <ThemeProvider>
+        <AuthProvider>
+          <NavigationContainer>
+            <StatusBar style="dark" />
+            <RootNavigator />
+          </NavigationContainer>
+        </AuthProvider>
+      </ThemeProvider>
     </ErrorBoundary>
   );
 }

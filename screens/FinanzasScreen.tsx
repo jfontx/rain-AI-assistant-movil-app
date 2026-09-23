@@ -12,7 +12,8 @@ import {
   ScrollView,
   RefreshControl,
 } from 'react-native';
-import { theme } from '../theme';
+import { useTheme } from '../context/ThemeContext';
+import { theme as staticTheme } from '../theme';
 import FloatingMicrophone from '../components/FloatingMicrophone';
 import { 
   obtenerTransacciones, 
@@ -34,12 +35,14 @@ const colorCategoria = (cat: string) => {
   const colores: Record<string, string> = {
     alimentación: '#F87171', transporte: '#34D399', servicios: '#60A5FA',
     educación: '#A78BFA', ocio: '#FBBF24', salud: '#F472B6',
-    vivienda: '#38BDF8', ropa: '#FB923C', tecnología: '#4ADE80', otro: theme.colors.outline,
+    vivienda: '#38BDF8', ropa: '#FB923C', tecnología: '#4ADE80', otro: staticTheme.colors.outline,
   };
-  return colores[cat] || theme.colors.outline;
+  return colores[cat] || staticTheme.colors.outline;
 };
 
 export default function FinanzasScreen() {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   const [transacciones, setTransacciones] = useState<Transaccion[]>([]);
   const [metas, setMetas] = useState<MetaAhorro[]>([]);
   const [cargando, setCargando] = useState(false);
@@ -138,60 +141,60 @@ export default function FinanzasScreen() {
   };
 
   const renderHeader = () => (
-    <View style={est.headerContainer}>
-      <View style={est.messageBubble}>
-        <Text style={est.messageText}>
+    <View style={styles.headerContainer}>
+      <View style={styles.messageBubble}>
+        <Text style={styles.messageText}>
           Tus gastos de este mes están {porcentajeGasto > 80 ? 'un poco altos' : 'bajo control'}. 
           Te quedan {formatearMonto(balance)} disponibles.
         </Text>
       </View>
 
-      <View style={est.balanceCard}>
-        <Text style={est.balanceLabel}>Saldo Disponible</Text>
-        <Text style={est.balanceMonto}>{formatearMonto(balance)}</Text>
+      <View style={styles.balanceCard}>
+        <Text style={styles.balanceLabel}>Saldo Disponible</Text>
+        <Text style={styles.balanceMonto}>{formatearMonto(balance)}</Text>
         
-        <View style={est.progressBarContainer}>
-          <View style={[est.progressBarFill, { width: `${porcentajeGasto}%`, backgroundColor: porcentajeGasto > 80 ? theme.colors.error : theme.colors.primary }]} />
+        <View style={styles.progressBarContainer}>
+          <View style={[styles.progressBarFill, { width: `${porcentajeGasto}%`, backgroundColor: porcentajeGasto > 80 ? theme.colors.error : theme.colors.primary }]} />
         </View>
-        <Text style={est.progressText}>
+        <Text style={styles.progressText}>
           Gastado {formatearMonto(gastosMes)} de {formatearMonto(ingresosMes)}
         </Text>
       </View>
 
-      <View style={est.actionButtonsRow}>
-        <TouchableOpacity style={est.actionBtn} onPress={() => abrirModal('gasto')}>
+      <View style={styles.actionButtonsRow}>
+        <TouchableOpacity style={styles.actionBtn} onPress={() => abrirModal('gasto')}>
           <ArrowDownCircle size={20} color={theme.colors.error} />
-          <Text style={est.actionBtnText}>Registrar Gasto</Text>
+          <Text style={styles.actionBtnText}>Registrar Gasto</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={est.actionBtn} onPress={() => abrirModal('ingreso')}>
+        <TouchableOpacity style={styles.actionBtn} onPress={() => abrirModal('ingreso')}>
           <ArrowUpCircle size={20} color={theme.colors.primary} />
-          <Text style={est.actionBtnText}>Ingreso</Text>
+          <Text style={styles.actionBtnText}>Ingreso</Text>
         </TouchableOpacity>
       </View>
 
-      <View style={est.metasContainer}>
-        <View style={est.sectionHeader}>
+      <View style={styles.metasContainer}>
+        <View style={styles.sectionHeader}>
           <Target size={20} color={theme.colors.onSurface} />
-          <Text style={est.sectionTitle}>Metas de Ahorro</Text>
+          <Text style={styles.sectionTitle}>Metas de Ahorro</Text>
           <TouchableOpacity onPress={() => setModalMetaVisible(true)} style={{ marginLeft: 'auto' }}>
             <Plus size={24} color={theme.colors.primary} />
           </TouchableOpacity>
         </View>
         {metas.length === 0 ? (
-          <Text style={est.emptyStateText}>
+          <Text style={styles.emptyStateText}>
             No tienes metas de ahorro activas. Pídele a Raín que cree una para empezar a ahorrar.
           </Text>
         ) : (
           metas.map(meta => {
             const pct = Math.min((meta.monto_actual / meta.monto_objetivo) * 100, 100);
             return (
-              <View key={meta.id} style={est.metaCard}>
-                <View style={est.metaRow}>
-                  <Text style={est.metaName}>{meta.nombre}</Text>
-                  <Text style={est.metaAmount}>{formatearMonto(meta.monto_actual)} / {formatearMonto(meta.monto_objetivo)}</Text>
+              <View key={meta.id} style={styles.metaCard}>
+                <View style={styles.metaRow}>
+                  <Text style={styles.metaName}>{meta.nombre}</Text>
+                  <Text style={styles.metaAmount}>{formatearMonto(meta.monto_actual)} / {formatearMonto(meta.monto_objetivo)}</Text>
                 </View>
-                <View style={est.progressBarContainer}>
-                  <View style={[est.progressBarFill, { width: `${pct}%`, backgroundColor: theme.colors.secondary }]} />
+                <View style={styles.progressBarContainer}>
+                  <View style={[styles.progressBarFill, { width: `${pct}%`, backgroundColor: theme.colors.secondary }]} />
                 </View>
               </View>
             );
@@ -199,32 +202,32 @@ export default function FinanzasScreen() {
         )}
       </View>
 
-      <Text style={[est.sectionTitle, { marginTop: theme.spacing.lg }]}>Transacciones Recientes</Text>
+      <Text style={[styles.sectionTitle, { marginTop: theme.spacing.lg }]}>Transacciones Recientes</Text>
     </View>
   );
 
   return (
-    <SafeAreaView style={est.contenedor}>
+    <SafeAreaView style={styles.contenedor}>
       <FlatList
         data={transacciones}
         keyExtractor={item => String(item.id)}
         refreshControl={<RefreshControl refreshing={cargando} onRefresh={cargarDatos} tintColor={theme.colors.primary} />}
-        contentContainerStyle={est.lista}
+        contentContainerStyle={styles.lista}
         ListHeaderComponent={renderHeader}
         ListEmptyComponent={
-          <Text style={est.textoVacio}>No tienes transacciones.</Text>
+          <Text style={styles.textoVacio}>No tienes transacciones.</Text>
         }
         renderItem={({ item }) => (
           <TouchableOpacity
-            style={est.tarjetaTransaccion}
+            style={styles.tarjetaTransaccion}
             onLongPress={() => item.id && confirmarEliminar(item.id)}
           >
-            <View style={[est.indicadorCategoria, { backgroundColor: colorCategoria(item.categoria) }]} />
-            <View style={est.infoTransaccion}>
-              <Text style={est.descripcionTransaccion}>{item.descripcion}</Text>
-              <Text style={est.categoriaTransaccion}>{item.comercio ? `${item.comercio} • ` : ''}{item.categoria}</Text>
+            <View style={[styles.indicadorCategoria, { backgroundColor: colorCategoria(item.categoria) }]} />
+            <View style={styles.infoTransaccion}>
+              <Text style={styles.descripcionTransaccion}>{item.descripcion}</Text>
+              <Text style={styles.categoriaTransaccion}>{item.comercio ? `${item.comercio} • ` : ''}{item.categoria}</Text>
             </View>
-            <Text style={[est.montoTransaccion, item.tipo === 'ingreso' ? est.positivo : est.negativo]}>
+            <Text style={[styles.montoTransaccion, item.tipo === 'ingreso' ? styles.positivo : styles.negativo]}>
               {item.tipo === 'ingreso' ? '+' : '-'}{formatearMonto(item.monto)}
             </Text>
           </TouchableOpacity>
@@ -235,14 +238,14 @@ export default function FinanzasScreen() {
 
       {/* Modal crear transacción */}
       <Modal visible={modalVisible} transparent animationType="fade">
-        <View style={est.modalOverlay}>
-          <View style={est.modal}>
-            <Text style={est.modalTitulo}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modal}>
+            <Text style={styles.modalTitulo}>
               Registrar {form.tipo === 'gasto' ? 'Gasto' : 'Ingreso'}
             </Text>
 
             <TextInput
-              style={est.inputModal}
+              style={styles.inputModal}
               placeholder="Monto (COP)"
               placeholderTextColor={theme.colors.outline}
               keyboardType="numeric"
@@ -250,39 +253,39 @@ export default function FinanzasScreen() {
               onChangeText={v => setForm(f => ({ ...f, monto: v }))}
             />
             <TextInput
-              style={est.inputModal}
+              style={styles.inputModal}
               placeholder="Descripción"
               placeholderTextColor={theme.colors.outline}
               value={form.descripcion}
               onChangeText={v => setForm(f => ({ ...f, descripcion: v }))}
             />
             <TextInput
-              style={est.inputModal}
+              style={styles.inputModal}
               placeholder="Comercio (opcional)"
               placeholderTextColor={theme.colors.outline}
               value={form.comercio}
               onChangeText={v => setForm(f => ({ ...f, comercio: v }))}
             />
 
-            <Text style={est.labelCats}>Categoría</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={est.selectorCats}>
+            <Text style={styles.labelCats}>Categoría</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.selectorCats}>
               {CATEGORIAS.map(cat => (
                 <TouchableOpacity
                   key={cat}
-                  style={[est.chipCategoria, form.categoria === cat && { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary }]}
+                  style={[styles.chipCategoria, form.categoria === cat && { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary }]}
                   onPress={() => setForm(f => ({ ...f, categoria: cat }))}
                 >
-                  <Text style={[est.textoChip, form.categoria === cat && { color: theme.colors.onPrimary }]}>{cat}</Text>
+                  <Text style={[styles.textoChip, form.categoria === cat && { color: theme.colors.onPrimary }]}>{cat}</Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>
 
-            <View style={est.filaBotones}>
-              <TouchableOpacity style={est.btnCancelar} onPress={() => setModalVisible(false)}>
-                <Text style={est.textoCancelar}>Cancelar</Text>
+            <View style={styles.filaBotones}>
+              <TouchableOpacity style={styles.btnCancelar} onPress={() => setModalVisible(false)}>
+                <Text style={styles.textoCancelar}>Cancelar</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={est.btnGuardar} onPress={guardarTransaccion}>
-                <Text style={est.textoGuardar}>Guardar</Text>
+              <TouchableOpacity style={styles.btnGuardar} onPress={guardarTransaccion}>
+                <Text style={styles.textoGuardar}>Guardar</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -291,19 +294,19 @@ export default function FinanzasScreen() {
 
       {/* Modal crear meta */}
       <Modal visible={modalMetaVisible} transparent animationType="fade">
-        <View style={est.modalOverlay}>
-          <View style={est.modal}>
-            <Text style={est.modalTitulo}>Nueva Meta de Ahorro</Text>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modal}>
+            <Text style={styles.modalTitulo}>Nueva Meta de Ahorro</Text>
 
             <TextInput
-              style={est.inputModal}
+              style={styles.inputModal}
               placeholder="Nombre (ej: Viaje, Computador)"
               placeholderTextColor={theme.colors.outline}
               value={formMeta.nombre}
               onChangeText={v => setFormMeta(f => ({ ...f, nombre: v }))}
             />
             <TextInput
-              style={est.inputModal}
+              style={styles.inputModal}
               placeholder="Monto Objetivo (COP)"
               placeholderTextColor={theme.colors.outline}
               keyboardType="numeric"
@@ -311,12 +314,12 @@ export default function FinanzasScreen() {
               onChangeText={v => setFormMeta(f => ({ ...f, monto_objetivo: v }))}
             />
 
-            <View style={est.filaBotones}>
-              <TouchableOpacity style={est.btnCancelar} onPress={() => setModalMetaVisible(false)}>
-                <Text style={est.textoCancelar}>Cancelar</Text>
+            <View style={styles.filaBotones}>
+              <TouchableOpacity style={styles.btnCancelar} onPress={() => setModalMetaVisible(false)}>
+                <Text style={styles.textoCancelar}>Cancelar</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={est.btnGuardar} onPress={guardarNuevaMeta}>
-                <Text style={est.textoGuardar}>Guardar Meta</Text>
+              <TouchableOpacity style={styles.btnGuardar} onPress={guardarNuevaMeta}>
+                <Text style={styles.textoGuardar}>Guardar Meta</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -327,7 +330,7 @@ export default function FinanzasScreen() {
   );
 }
 
-const est = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   contenedor: { flex: 1, backgroundColor: theme.colors.background },
   lista: { padding: theme.spacing.margin, paddingBottom: 100 },
   headerContainer: { marginBottom: theme.spacing.lg },

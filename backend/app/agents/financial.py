@@ -13,7 +13,7 @@ from app.db.models import (
 from app.db.session import engine
 
 
-def registrar_transaccion(
+def registrar_transaccion(usuario_id: int,
     tipo: str,
     monto: float,
     categoria: str,
@@ -28,7 +28,7 @@ def registrar_transaccion(
     Retorna un diccionario con los datos de la transacción creada.
     """
     with Session(engine) as session:
-        transaccion = Transaccion(
+        transaccion = Transaccion(usuario_id=usuario_id, 
             tipo=TipoTransaccion(tipo),
             monto=float(monto),
             moneda=moneda,
@@ -54,7 +54,7 @@ def registrar_transaccion(
         }
 
 
-def consultar_balance(
+def consultar_balance(usuario_id: int,
     fecha_desde: Optional[str] = None,
     fecha_hasta: Optional[str] = None,
 ) -> dict:
@@ -64,7 +64,7 @@ def consultar_balance(
     Retorna dict con ingresos_total, gastos_total, balance.
     """
     with Session(engine) as session:
-        query = select(Transaccion)
+        query = select(Transaccion).where(Transaccion.usuario_id == usuario_id)
         if fecha_desde:
             query = query.where(Transaccion.fecha >= datetime.fromisoformat(fecha_desde))
         if fecha_hasta:
@@ -80,18 +80,18 @@ def consultar_balance(
             "ingresos_total": ingresos,
             "gastos_total": gastos,
             "balance": balance,
-            "moneda": "COP",
+            "moneda": "pesos colombianos",
             "num_transacciones": len(transacciones),
         }
 
 
-def consultar_meta(nombre: str) -> dict:
+def consultar_meta(usuario_id: int, nombre: str) -> dict:
     """
     Busca una meta de ahorro por nombre (búsqueda parcial, case-insensitive).
     Retorna sus datos o un error si no existe.
     """
     with Session(engine) as session:
-        metas = session.exec(select(MetaAhorro)).all()
+        metas = session.exec(select(MetaAhorro).where(MetaAhorro.usuario_id == usuario_id)).all()
         # Búsqueda flexible por nombre
         meta = next(
             (m for m in metas if nombre.lower() in m.nombre.lower()),
@@ -112,12 +112,12 @@ def consultar_meta(nombre: str) -> dict:
         }
 
 
-def crear_meta(nombre: str, monto_objetivo: float) -> dict:
+def crear_meta(usuario_id: int, nombre: str, monto_objetivo: float) -> dict:
     """
     Crea una nueva meta de ahorro en la base de datos.
     """
     with Session(engine) as session:
-        meta = MetaAhorro(
+        meta = MetaAhorro(usuario_id=usuario_id, 
             nombre=nombre,
             monto_objetivo=float(monto_objetivo),
             monto_actual=0.0
@@ -135,13 +135,13 @@ def crear_meta(nombre: str, monto_objetivo: float) -> dict:
         }
 
 
-def actualizar_meta(nombre: str, monto_abonado: float) -> dict:
+def actualizar_meta(usuario_id: int, nombre: str, monto_abonado: float) -> dict:
     """
     Abona un monto a una meta de ahorro existente.
     Busca por nombre, suma el monto_abonado al monto_actual.
     """
     with Session(engine) as session:
-        metas = session.exec(select(MetaAhorro)).all()
+        metas = session.exec(select(MetaAhorro).where(MetaAhorro.usuario_id == usuario_id)).all()
         meta = next(
             (m for m in metas if nombre.lower() in m.nombre.lower()),
             None,
@@ -164,13 +164,13 @@ def actualizar_meta(nombre: str, monto_abonado: float) -> dict:
         }
 
 
-def consultar_tarjeta(nombre: str) -> dict:
+def consultar_tarjeta(usuario_id: int, nombre: str) -> dict:
     """
     Obtiene información de una tarjeta de crédito por nombre.
     Retorna cupo disponible, cupo utilizado y próximas fechas de pago/corte.
     """
     with Session(engine) as session:
-        tarjetas = session.exec(select(TarjetaCredito)).all()
+        tarjetas = session.exec(select(TarjetaCredito).where(TarjetaCredito.usuario_id == usuario_id)).all()
         tarjeta = next(
             (t for t in tarjetas if nombre.lower() in t.nombre.lower()),
             None,
@@ -190,24 +190,24 @@ def consultar_tarjeta(nombre: str) -> dict:
             "tasa_interes": tarjeta.tasa_interes,
         }
 
-def proyectar_flujo_caja() -> dict:
+def proyectar_flujo_caja(usuario_id: int) -> dict:
     """
     Calcula el flujo de caja proyectado a fin de mes.
     Toma el balance actual y le resta las obligaciones (Gastos Fijos activos).
     """
     with Session(engine) as session:
         # Calcular balance actual
-        transacciones = session.exec(select(Transaccion)).all()
+        transacciones = session.exec(select(Transaccion).where(Transaccion.usuario_id == usuario_id)).all()
         ingresos = sum(t.monto for t in transacciones if t.tipo == TipoTransaccion.ingreso)
         gastos = sum(t.monto for t in transacciones if t.tipo == TipoTransaccion.gasto)
         balance_actual = ingresos - gastos
 
         # Sumar gastos fijos activos
-        gastos_fijos = session.exec(select(GastoFijo).where(GastoFijo.activo == True)).all()
+        gastos_fijos = session.exec(select(GastoFijo).where(GastoFijo.usuario_id == usuario_id).where(GastoFijo.activo == True)).all()
         total_obligaciones = sum(gf.monto for gf in gastos_fijos)
 
         # También sumar cuotas mensuales de préstamos
-        prestamos = session.exec(select(Prestamo)).all()
+        prestamos = session.exec(select(Prestamo).where(Prestamo.usuario_id == usuario_id)).all()
         cuotas_prestamos = sum(p.cuota_mensual for p in prestamos if p.saldo_pendiente > 0)
         
         total_obligaciones += cuotas_prestamos
@@ -224,13 +224,13 @@ def proyectar_flujo_caja() -> dict:
             "balance_proyectado_fin_de_mes": proyeccion_fin_de_mes,
         }
 
-def calcular_intereses_pasivos() -> dict:
+def calcular_intereses_pasivos(usuario_id: int) -> dict:
     """
     Calcula un estimado de intereses a pagar por pasivos financieros (Tarjetas de Crédito y Préstamos).
     """
     with Session(engine) as session:
         # Intereses de préstamos
-        prestamos = session.exec(select(Prestamo).where(Prestamo.saldo_pendiente > 0)).all()
+        prestamos = session.exec(select(Prestamo).where(Prestamo.usuario_id == usuario_id).where(Prestamo.saldo_pendiente > 0)).all()
         detalle_prestamos = []
         total_intereses_prestamos = 0.0
         
@@ -246,7 +246,7 @@ def calcular_intereses_pasivos() -> dict:
             })
 
         # Intereses de tarjetas (asumiendo que pagan interés sobre el saldo utilizado)
-        tarjetas = session.exec(select(TarjetaCredito).where(TarjetaCredito.cupo_utilizado > 0)).all()
+        tarjetas = session.exec(select(TarjetaCredito).where(TarjetaCredito.usuario_id == usuario_id).where(TarjetaCredito.cupo_utilizado > 0)).all()
         detalle_tarjetas = []
         total_intereses_tarjetas = 0.0
 
@@ -269,9 +269,9 @@ def calcular_intereses_pasivos() -> dict:
             "detalle_tarjetas": detalle_tarjetas
         }
 
-def crear_tarjeta_credito(nombre: str, cupo_total: float, fecha_corte: int, fecha_pago: int, tasa_interes: Optional[float] = None) -> dict:
+def crear_tarjeta_credito(usuario_id: int, nombre: str, cupo_total: float, fecha_corte: int, fecha_pago: int, tasa_interes: Optional[float] = None) -> dict:
     with Session(engine) as session:
-        tarjeta = TarjetaCredito(
+        tarjeta = TarjetaCredito(usuario_id=usuario_id, 
             nombre=nombre,
             cupo_total=float(cupo_total),
             fecha_corte=fecha_corte,
@@ -283,9 +283,9 @@ def crear_tarjeta_credito(nombre: str, cupo_total: float, fecha_corte: int, fech
         session.refresh(tarjeta)
         return {"mensaje": f"Tarjeta '{nombre}' registrada exitosamente.", "id": tarjeta.id}
 
-def crear_prestamo(nombre: str, monto_total: float, saldo_pendiente: float, cuota_mensual: float, tasa_interes_mensual: float, fecha_pago_mensual: int) -> dict:
+def crear_prestamo(usuario_id: int, nombre: str, monto_total: float, saldo_pendiente: float, cuota_mensual: float, tasa_interes_mensual: float, fecha_pago_mensual: int) -> dict:
     with Session(engine) as session:
-        prestamo = Prestamo(
+        prestamo = Prestamo(usuario_id=usuario_id, 
             nombre=nombre,
             monto_total=float(monto_total),
             saldo_pendiente=float(saldo_pendiente),
@@ -298,9 +298,9 @@ def crear_prestamo(nombre: str, monto_total: float, saldo_pendiente: float, cuot
         session.refresh(prestamo)
         return {"mensaje": f"Préstamo '{nombre}' registrado exitosamente.", "id": prestamo.id}
 
-def crear_gasto_fijo(nombre: str, monto: float, dia_pago: int, categoria: str) -> dict:
+def crear_gasto_fijo(usuario_id: int, nombre: str, monto: float, dia_pago: int, categoria: str) -> dict:
     with Session(engine) as session:
-        gasto = GastoFijo(
+        gasto = GastoFijo(usuario_id=usuario_id, 
             nombre=nombre,
             monto=float(monto),
             dia_pago=dia_pago,

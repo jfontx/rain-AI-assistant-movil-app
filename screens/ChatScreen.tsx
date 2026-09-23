@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,7 @@ import {
   SafeAreaView,
 } from 'react-native';
 import * as Speech from 'expo-speech';
-import { theme } from '../theme';
+import { useTheme } from '../context/ThemeContext';
 import { enviarMensaje } from '../services/api';
 import { Send, MicOff } from 'lucide-react-native';
 
@@ -31,10 +31,27 @@ const MENSAJE_BIENVENIDA: Mensaje = {
 };
 
 export default function ChatScreen() {
+  const { theme } = useTheme();
+  const estilos = createStyles(theme);
   const [mensajes, setMensajes] = useState<Mensaje[]>([MENSAJE_BIENVENIDA]);
   const [inputTexto, setInputTexto] = useState('');
   const [cargando, setCargando] = useState(false);
   const flatListRef = useRef<FlatList>(null);
+
+  // Reproducir mensaje de bienvenida al abrir el chat
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      Speech.speak(MENSAJE_BIENVENIDA.texto, {
+        language: 'es-MX',
+        pitch: 1.0,
+        rate: 0.95,
+      });
+    }, 500);
+    return () => {
+      clearTimeout(timer);
+      Speech.stop();
+    };
+  }, []);
 
   const enviar = useCallback(async () => {
     const texto = inputTexto.trim();
@@ -170,7 +187,7 @@ export default function ChatScreen() {
   );
 }
 
-const estilos = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   contenedor: {
     flex: 1,
     backgroundColor: theme.colors.background,

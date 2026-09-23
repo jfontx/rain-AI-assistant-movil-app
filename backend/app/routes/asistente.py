@@ -3,10 +3,12 @@ Endpoint principal del asistente Raín.
 Recibe mensajes de texto (voz convertida a texto o chat directo)
 y retorna la respuesta del orquestador.
 """
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 
 from app.agents.orchestrator import procesar_mensaje
+from app.core.deps import get_current_user
+from app.db.models import Usuario
 
 router = APIRouter(prefix="/api/asistente", tags=["Asistente"])
 
@@ -20,7 +22,7 @@ class RespuestaAsistente(BaseModel):
 
 
 @router.post("/mensaje", response_model=RespuestaAsistente)
-async def enviar_mensaje(entrada: MensajeEntrada):
+async def enviar_mensaje(entrada: MensajeEntrada, current_user: Usuario = Depends(get_current_user)):
     """
     Endpoint unificado de chat y voz.
     La app móvil envía el texto del usuario aquí,
@@ -31,7 +33,7 @@ async def enviar_mensaje(entrada: MensajeEntrada):
         raise HTTPException(status_code=400, detail="El mensaje no puede estar vacío")
 
     try:
-        respuesta = await procesar_mensaje(entrada.texto)
+        respuesta = await procesar_mensaje(entrada.texto, current_user.id)
         return RespuestaAsistente(respuesta=respuesta)
     except Exception as e:
         raise HTTPException(

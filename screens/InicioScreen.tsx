@@ -1,13 +1,18 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
-import { useIsFocused } from '@react-navigation/native';
-import { theme } from '../theme';
+import React, { useEffect, useState, useContext } from 'react';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
+import { useTheme } from '../context/ThemeContext';
 import FloatingMicrophone from '../components/FloatingMicrophone';
 import { obtenerTransacciones, obtenerEventos, Transaccion, Evento } from '../services/api';
-import { Wallet, AlertCircle } from 'lucide-react-native';
+import { Wallet, AlertCircle, Settings } from 'lucide-react-native';
+import { AuthContext } from '../context/AuthContext';
 
 export default function InicioScreen() {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   const isFocused = useIsFocused();
+  const navigation = useNavigation<any>();
+  const { usuario } = useContext(AuthContext);
   const [cargando, setCargando] = useState(true);
   const [balanceMes, setBalanceMes] = useState(0);
   const [tareasUrgentes, setTareasUrgentes] = useState<Evento[]>([]);
@@ -58,8 +63,13 @@ export default function InicioScreen() {
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.header}>
-          <Text style={styles.greeting}>Hola, Juan 👋</Text>
-          <Text style={styles.subtitle}>Aquí tienes tu resumen del día</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.greeting}>Hola, {usuario?.nombre.split(' ')[0] || 'Visitante'} 👋</Text>
+            <Text style={styles.subtitle}>Aquí tienes tu resumen del día</Text>
+          </View>
+          <TouchableOpacity onPress={() => navigation.navigate('Configuracion')} style={styles.logoutButton}>
+            <Settings color={theme.colors.onSurfaceVariant} size={24} />
+          </TouchableOpacity>
         </View>
 
         {cargando ? (
@@ -111,7 +121,7 @@ export default function InicioScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
@@ -122,7 +132,13 @@ const styles = StyleSheet.create({
     paddingBottom: 100, // Espacio para el FAB
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
     marginBottom: theme.spacing.xl,
+  },
+  logoutButton: {
+    padding: 8,
   },
   greeting: {
     fontFamily: theme.typography.fontFamily.bold,

@@ -25,7 +25,7 @@ IMAP_SERVER = "imap.gmail.com"
 # The orchestrator LLM will summarize the text returned.
 
 
-async def leer_correos_no_leidos(limite: int = 10) -> List[dict]:
+async def leer_correos_no_leidos(usuario_id: int, limite: int = 10) -> List[dict]:
     """
     Conecta al buzón Gmail via IMAP, lee hasta `limite` correos no leídos,
     los resume con el LLM y los guarda en la tabla Correo.
@@ -59,11 +59,11 @@ async def leer_correos_no_leidos(limite: int = 10) -> List[dict]:
         with Session(engine) as session:
             # Evitar duplicados por asunto + remitente
             existe = session.exec(
-                select(Correo).where(Correo.asunto == asunto, Correo.remitente == remitente)
+                select(Correo).where(Correo.usuario_id == usuario_id).where(Correo.asunto == asunto, Correo.remitente == remitente)
             ).first()
 
             if not existe:
-                correo = Correo(
+                correo = Correo(usuario_id=usuario_id, 
                     remitente=remitente,
                     asunto=asunto,
                     resumen=resumen_texto,
@@ -78,7 +78,7 @@ async def leer_correos_no_leidos(limite: int = 10) -> List[dict]:
     # para que la IA tenga contexto, incluso si no se descargaron nuevos hoy.
     with Session(engine) as session:
         ultimos_correos = session.exec(
-            select(Correo).where(Correo.leido == False).order_by(Correo.fecha_recibido.desc()).limit(limite)
+            select(Correo).where(Correo.usuario_id == usuario_id).where(Correo.leido == False).order_by(Correo.fecha_recibido.desc()).limit(limite)
         ).all()
 
         return [

@@ -8,6 +8,18 @@
  */
 const BASE_URL = 'http://100.101.159.17:8000'; // WiFi local — no requiere Tailscale en iPhone
 
+let token: string | null = null;
+
+export const setAuthToken = (newToken: string | null) => {
+  token = newToken;
+};
+
+const getHeaders = () => {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  return headers;
+};
+
 // ─────────────────────────────────────────────────
 // TIPOS
 // ─────────────────────────────────────────────────
@@ -50,7 +62,7 @@ export interface Evento {
 export async function enviarMensaje(texto: string): Promise<string> {
   const respuesta = await fetch(`${BASE_URL}/api/asistente/mensaje`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getHeaders(),
     body: JSON.stringify({ texto }),
   });
 
@@ -67,7 +79,7 @@ export async function enviarMensaje(texto: string): Promise<string> {
 // ─────────────────────────────────────────────────
 
 export async function obtenerTransacciones(): Promise<Transaccion[]> {
-  const resp = await fetch(`${BASE_URL}/api/transacciones/`);
+  const resp = await fetch(`${BASE_URL}/api/transacciones/`, { headers: getHeaders() });
   if (!resp.ok) throw new Error('Error obteniendo transacciones');
   return resp.json();
 }
@@ -75,7 +87,7 @@ export async function obtenerTransacciones(): Promise<Transaccion[]> {
 export async function crearTransaccion(datos: Transaccion): Promise<Transaccion> {
   const resp = await fetch(`${BASE_URL}/api/transacciones/`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getHeaders(),
     body: JSON.stringify(datos),
   });
   if (!resp.ok) throw new Error('Error creando transacción');
@@ -83,7 +95,7 @@ export async function crearTransaccion(datos: Transaccion): Promise<Transaccion>
 }
 
 export async function eliminarTransaccion(id: number): Promise<void> {
-  await fetch(`${BASE_URL}/api/transacciones/${id}`, { method: 'DELETE' });
+  await fetch(`${BASE_URL}/api/transacciones/${id}`, { method: 'DELETE', headers: getHeaders() });
 }
 
 // ─────────────────────────────────────────────────
@@ -94,7 +106,7 @@ export async function obtenerEventos(tipo?: 'tarea' | 'evento'): Promise<Evento[
   const url = tipo
     ? `${BASE_URL}/api/eventos/?tipo=${tipo}`
     : `${BASE_URL}/api/eventos/`;
-  const resp = await fetch(url);
+  const resp = await fetch(url, { headers: getHeaders() });
   if (!resp.ok) throw new Error('Error obteniendo eventos');
   return resp.json();
 }
@@ -102,7 +114,7 @@ export async function obtenerEventos(tipo?: 'tarea' | 'evento'): Promise<Evento[
 export async function crearEvento(datos: Evento): Promise<Evento> {
   const resp = await fetch(`${BASE_URL}/api/eventos/`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getHeaders(),
     body: JSON.stringify(datos),
   });
   if (!resp.ok) throw new Error('Error creando evento');
@@ -112,7 +124,7 @@ export async function crearEvento(datos: Evento): Promise<Evento> {
 export async function actualizarEvento(id: number, datos: Partial<Evento>): Promise<Evento> {
   const resp = await fetch(`${BASE_URL}/api/eventos/${id}`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getHeaders(),
     body: JSON.stringify(datos),
   });
   if (!resp.ok) throw new Error('Error actualizando evento');
@@ -120,7 +132,7 @@ export async function actualizarEvento(id: number, datos: Partial<Evento>): Prom
 }
 
 export async function eliminarEvento(id: number): Promise<void> {
-  await fetch(`${BASE_URL}/api/eventos/${id}`, { method: 'DELETE' });
+  await fetch(`${BASE_URL}/api/eventos/${id}`, { method: 'DELETE', headers: getHeaders() });
 }
 
 // ─────────────────────────────────────────────────
@@ -136,7 +148,7 @@ export interface MetaAhorro {
 }
 
 export async function obtenerMetas(): Promise<MetaAhorro[]> {
-  const resp = await fetch(`${BASE_URL}/api/metas/`);
+  const resp = await fetch(`${BASE_URL}/api/metas/`, { headers: getHeaders() });
   if (!resp.ok) throw new Error('Error obteniendo metas');
   return resp.json();
 }
@@ -144,7 +156,7 @@ export async function obtenerMetas(): Promise<MetaAhorro[]> {
 export async function crearMeta(datos: { nombre: string; monto_objetivo: number }): Promise<MetaAhorro> {
   const resp = await fetch(`${BASE_URL}/api/metas/`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getHeaders(),
     body: JSON.stringify(datos),
   });
   if (!resp.ok) throw new Error('Error creando meta');
@@ -185,7 +197,7 @@ export interface GastoFijo {
 }
 
 export async function obtenerTarjetas(): Promise<TarjetaCredito[]> {
-  const resp = await fetch(`${BASE_URL}/api/tarjetas/`);
+  const resp = await fetch(`${BASE_URL}/api/tarjetas/`, { headers: getHeaders() });
   if (!resp.ok) throw new Error('Error obteniendo tarjetas');
   return resp.json();
 }
@@ -193,7 +205,7 @@ export async function obtenerTarjetas(): Promise<TarjetaCredito[]> {
 export async function crearTarjeta(datos: TarjetaCredito): Promise<TarjetaCredito> {
   const resp = await fetch(`${BASE_URL}/api/tarjetas/`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getHeaders(),
     body: JSON.stringify(datos),
   });
   if (!resp.ok) throw new Error('Error creando tarjeta');
@@ -201,11 +213,11 @@ export async function crearTarjeta(datos: TarjetaCredito): Promise<TarjetaCredit
 }
 
 export async function eliminarTarjeta(id: number): Promise<void> {
-  await fetch(`${BASE_URL}/api/tarjetas/${id}`, { method: 'DELETE' });
+  await fetch(`${BASE_URL}/api/tarjetas/${id}`, { method: 'DELETE', headers: getHeaders() });
 }
 
 export async function obtenerPrestamos(): Promise<Prestamo[]> {
-  const resp = await fetch(`${BASE_URL}/api/prestamos/`);
+  const resp = await fetch(`${BASE_URL}/api/prestamos/`, { headers: getHeaders() });
   if (!resp.ok) throw new Error('Error obteniendo prestamos');
   return resp.json();
 }
@@ -213,7 +225,7 @@ export async function obtenerPrestamos(): Promise<Prestamo[]> {
 export async function crearPrestamo(datos: Prestamo): Promise<Prestamo> {
   const resp = await fetch(`${BASE_URL}/api/prestamos/`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getHeaders(),
     body: JSON.stringify(datos),
   });
   if (!resp.ok) throw new Error('Error creando prestamo');
@@ -221,11 +233,11 @@ export async function crearPrestamo(datos: Prestamo): Promise<Prestamo> {
 }
 
 export async function eliminarPrestamo(id: number): Promise<void> {
-  await fetch(`${BASE_URL}/api/prestamos/${id}`, { method: 'DELETE' });
+  await fetch(`${BASE_URL}/api/prestamos/${id}`, { method: 'DELETE', headers: getHeaders() });
 }
 
 export async function obtenerGastosFijos(): Promise<GastoFijo[]> {
-  const resp = await fetch(`${BASE_URL}/api/gastos-fijos/`);
+  const resp = await fetch(`${BASE_URL}/api/gastos-fijos/`, { headers: getHeaders() });
   if (!resp.ok) throw new Error('Error obteniendo gastos fijos');
   return resp.json();
 }
@@ -233,7 +245,7 @@ export async function obtenerGastosFijos(): Promise<GastoFijo[]> {
 export async function crearGastoFijo(datos: GastoFijo): Promise<GastoFijo> {
   const resp = await fetch(`${BASE_URL}/api/gastos-fijos/`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getHeaders(),
     body: JSON.stringify(datos),
   });
   if (!resp.ok) throw new Error('Error creando gasto fijo');
@@ -241,5 +253,5 @@ export async function crearGastoFijo(datos: GastoFijo): Promise<GastoFijo> {
 }
 
 export async function eliminarGastoFijo(id: number): Promise<void> {
-  await fetch(`${BASE_URL}/api/gastos-fijos/${id}`, { method: 'DELETE' });
+  await fetch(`${BASE_URL}/api/gastos-fijos/${id}`, { method: 'DELETE', headers: getHeaders() });
 }

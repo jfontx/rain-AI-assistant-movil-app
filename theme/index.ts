@@ -2,31 +2,60 @@
  * Design Tokens extraídos de Google Stitch (Calm Rain Assistant)
  */
 
+export const lightColors = {
+  // Primary & Secondary
+  primary: '#4140d1',
+  primaryContainer: '#5b5ceb',
+  onPrimary: '#ffffff',
+  onPrimaryContainer: '#f5f2ff',
+  secondary: '#4648d4',
+  secondaryContainer: '#6063ee',
+  onSecondary: '#ffffff',
+  
+  // Canvas & Surfaces
+  background: '#f8f9ff', // Base mist
+  surface: '#ffffff', // Interactive Cards & Panels
+  surfaceVariant: '#f1f5f9', // Subtle fog for nested segments
+  
+  // Text & Content
+  onSurface: '#0f172a', // Deep slate
+  onSurfaceVariant: '#64748b', // Slate balance
+  outline: '#94a3b8', // Mist slate
+  
+  // Tertiary & Urgency
+  tertiary: '#f59e0b', // Soft amber
+  error: '#f43f5e', // Soft coral
+};
+
+export const darkColors = {
+  // Primary & Secondary
+  primary: '#8284ff', // Lighter primary for dark mode
+  primaryContainer: '#2e2c94', // Darker container
+  onPrimary: '#ffffff',
+  onPrimaryContainer: '#e5e3ff',
+  secondary: '#8a8cff',
+  secondaryContainer: '#35379b',
+  onSecondary: '#ffffff',
+  
+  // Canvas & Surfaces
+  background: '#0f172a', // Deep slate background
+  surface: '#1e293b', // Elevated surface
+  surfaceVariant: '#334155', // More elevated variant
+  
+  // Text & Content
+  onSurface: '#f8fafc', // Light text
+  onSurfaceVariant: '#cbd5e1', // Dimmer text
+  outline: '#64748b', // Outline color
+  
+  // Tertiary & Urgency
+  tertiary: '#fbbf24', // Amber
+  error: '#fb7185', // Soft red
+};
+
+export type Colors = typeof lightColors;
+
 export const theme = {
-  colors: {
-    // Primary & Secondary
-    primary: '#4140d1',
-    primaryContainer: '#5b5ceb',
-    onPrimary: '#ffffff',
-    onPrimaryContainer: '#f5f2ff',
-    secondary: '#4648d4',
-    secondaryContainer: '#6063ee',
-    onSecondary: '#ffffff',
-    
-    // Canvas & Surfaces
-    background: '#f8f9ff', // Base mist
-    surface: '#ffffff', // Interactive Cards & Panels
-    surfaceVariant: '#f1f5f9', // Subtle fog for nested segments
-    
-    // Text & Content
-    onSurface: '#0f172a', // Deep slate
-    onSurfaceVariant: '#64748b', // Slate balance
-    outline: '#94a3b8', // Mist slate
-    
-    // Tertiary & Urgency
-    tertiary: '#f59e0b', // Soft amber
-    error: '#f43f5e', // Soft coral
-  },
+  colors: lightColors,
   typography: {
     fontFamily: {
       regular: 'PlusJakartaSans_400Regular',
