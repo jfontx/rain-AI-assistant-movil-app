@@ -25,6 +25,9 @@ FUNCIONES_DISPONIBLES: dict[str, Any] = {
     "consultar_meta": financial.consultar_meta,
     "actualizar_meta": financial.actualizar_meta,
     "consultar_tarjeta": financial.consultar_tarjeta,
+    "crear_tarjeta_credito": financial.crear_tarjeta_credito,
+    "crear_prestamo": financial.crear_prestamo,
+    "crear_gasto_fijo": financial.crear_gasto_fijo,
     "proyectar_flujo_caja": financial.proyectar_flujo_caja,
     "calcular_intereses_pasivos": financial.calcular_intereses_pasivos,
     # Agenda

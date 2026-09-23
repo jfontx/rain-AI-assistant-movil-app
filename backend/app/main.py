@@ -21,6 +21,8 @@ from app.routes import (
     tarjetas,
     asistente,
     webhook,
+    prestamos,
+    gastos_fijos,
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -63,6 +65,8 @@ app.include_router(metas.router)
 app.include_router(tarjetas.router)
 app.include_router(asistente.router)
 app.include_router(webhook.router)
+app.include_router(prestamos.router)
+app.include_router(gastos_fijos.router)
 
 
 # ─────────────────────────────────────────────────

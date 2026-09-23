@@ -198,6 +198,69 @@ TOOLS = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "crear_tarjeta_credito",
+            "description": (
+                "Registra una nueva tarjeta de crédito. Úsala cuando el usuario diga que tiene "
+                "o sacó una nueva tarjeta de crédito."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "nombre": {"type": "string", "description": "Nombre o banco (ej: Nu, Bancolombia).",},
+                    "cupo_total": {"type": "number", "description": "Cupo total de la tarjeta en COP.",},
+                    "fecha_corte": {"type": "integer", "description": "Día del mes (1-31) en que corta la tarjeta.",},
+                    "fecha_pago": {"type": "integer", "description": "Día del mes (1-31) límite de pago.",},
+                    "tasa_interes": {"type": "number", "description": "Tasa de interés mensual (opcional).",},
+                },
+                "required": ["nombre", "cupo_total", "fecha_corte", "fecha_pago"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "crear_prestamo",
+            "description": (
+                "Registra un nuevo préstamo o deuda. Úsala cuando el usuario indique que sacó "
+                "un préstamo, crédito, o le debe dinero a alguien."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "nombre": {"type": "string", "description": "Nombre del préstamo o entidad.",},
+                    "monto_total": {"type": "number", "description": "Monto total prestado en COP.",},
+                    "saldo_pendiente": {"type": "number", "description": "Saldo actual pendiente en COP.",},
+                    "cuota_mensual": {"type": "number", "description": "Valor de la cuota mensual en COP.",},
+                    "tasa_interes_mensual": {"type": "number", "description": "Tasa de interés mensual (ej: 1.5).",},
+                    "fecha_pago_mensual": {"type": "integer", "description": "Día del mes (1-31) en que se paga la cuota.",},
+                },
+                "required": ["nombre", "monto_total", "saldo_pendiente", "cuota_mensual", "tasa_interes_mensual", "fecha_pago_mensual"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "crear_gasto_fijo",
+            "description": (
+                "Registra un nuevo gasto fijo o suscripción mensual (ej: Netflix, arriendo, gimnasio). "
+                "Úsala cuando el usuario mencione un gasto recurrente."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "nombre": {"type": "string", "description": "Nombre del gasto (ej: Arriendo, Netflix).",},
+                    "monto": {"type": "number", "description": "Monto mensual en COP.",},
+                    "dia_pago": {"type": "integer", "description": "Día del mes (1-31) en que se suele pagar.",},
+                    "categoria": {"type": "string", "description": "Categoría (vivienda, ocio, servicios, salud).",},
+                },
+                "required": ["nombre", "monto", "dia_pago", "categoria"],
+            },
+        },
+    },
     # ─────────────────────────────
     # HERRAMIENTAS DE AGENDA
     # ─────────────────────────────

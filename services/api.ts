@@ -150,3 +150,96 @@ export async function crearMeta(datos: { nombre: string; monto_objetivo: number 
   if (!resp.ok) throw new Error('Error creando meta');
   return resp.json();
 }
+
+// ─────────────────────────────────────────────────
+// OBLIGACIONES (Tarjetas, Préstamos, Gastos Fijos)
+// ─────────────────────────────────────────────────
+
+export interface TarjetaCredito {
+  id?: number;
+  nombre: string;
+  cupo_total: number;
+  cupo_utilizado: number;
+  fecha_corte: number;
+  fecha_pago: number;
+  tasa_interes?: number;
+}
+
+export interface Prestamo {
+  id?: number;
+  nombre: string;
+  monto_total: number;
+  saldo_pendiente: number;
+  cuota_mensual: number;
+  tasa_interes_mensual: number;
+  fecha_pago_mensual: number;
+}
+
+export interface GastoFijo {
+  id?: number;
+  nombre: string;
+  monto: number;
+  dia_pago: number;
+  categoria: string;
+  activo: boolean;
+}
+
+export async function obtenerTarjetas(): Promise<TarjetaCredito[]> {
+  const resp = await fetch(`${BASE_URL}/api/tarjetas/`);
+  if (!resp.ok) throw new Error('Error obteniendo tarjetas');
+  return resp.json();
+}
+
+export async function crearTarjeta(datos: TarjetaCredito): Promise<TarjetaCredito> {
+  const resp = await fetch(`${BASE_URL}/api/tarjetas/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(datos),
+  });
+  if (!resp.ok) throw new Error('Error creando tarjeta');
+  return resp.json();
+}
+
+export async function eliminarTarjeta(id: number): Promise<void> {
+  await fetch(`${BASE_URL}/api/tarjetas/${id}`, { method: 'DELETE' });
+}
+
+export async function obtenerPrestamos(): Promise<Prestamo[]> {
+  const resp = await fetch(`${BASE_URL}/api/prestamos/`);
+  if (!resp.ok) throw new Error('Error obteniendo prestamos');
+  return resp.json();
+}
+
+export async function crearPrestamo(datos: Prestamo): Promise<Prestamo> {
+  const resp = await fetch(`${BASE_URL}/api/prestamos/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(datos),
+  });
+  if (!resp.ok) throw new Error('Error creando prestamo');
+  return resp.json();
+}
+
+export async function eliminarPrestamo(id: number): Promise<void> {
+  await fetch(`${BASE_URL}/api/prestamos/${id}`, { method: 'DELETE' });
+}
+
+export async function obtenerGastosFijos(): Promise<GastoFijo[]> {
+  const resp = await fetch(`${BASE_URL}/api/gastos-fijos/`);
+  if (!resp.ok) throw new Error('Error obteniendo gastos fijos');
+  return resp.json();
+}
+
+export async function crearGastoFijo(datos: GastoFijo): Promise<GastoFijo> {
+  const resp = await fetch(`${BASE_URL}/api/gastos-fijos/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(datos),
+  });
+  if (!resp.ok) throw new Error('Error creando gasto fijo');
+  return resp.json();
+}
+
+export async function eliminarGastoFijo(id: number): Promise<void> {
+  await fetch(`${BASE_URL}/api/gastos-fijos/${id}`, { method: 'DELETE' });
+}

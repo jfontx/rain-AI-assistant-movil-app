@@ -15,12 +15,13 @@ import {
   PlusJakartaSans_600SemiBold,
   PlusJakartaSans_700Bold,
 } from '@expo-google-fonts/plus-jakarta-sans';
-import { Home, Wallet, CheckSquare, Calendar, Mic } from 'lucide-react-native';
+import { Home, Wallet, CheckSquare, Calendar, Mic, CreditCard } from 'lucide-react-native';
 
 import InicioScreen from './screens/InicioScreen';
 import FinanzasScreen from './screens/FinanzasScreen';
 import TareasScreen from './screens/TareasScreen';
 import CalendarioScreen from './screens/CalendarioScreen';
+import ObligacionesScreen from './screens/ObligacionesScreen';
 import ChatScreen from './screens/ChatScreen';
 import { ErrorBoundary } from './ErrorBoundary';
 
@@ -37,6 +38,7 @@ function MainTabs() {
         tabBarIcon: ({ focused, color, size }) => {
           if (route.name === 'Inicio') return <Home size={24} color={color} />;
           if (route.name === 'Finanzas') return <Wallet size={24} color={color} />;
+          if (route.name === 'Cuentas') return <CreditCard size={24} color={color} />;
           if (route.name === 'Tareas') return <CheckSquare size={24} color={color} />;
           if (route.name === 'Calendario') return <Calendar size={24} color={color} />;
           return null;
@@ -60,6 +62,7 @@ function MainTabs() {
     >
       <Tab.Screen name="Inicio" component={InicioScreen} />
       <Tab.Screen name="Finanzas" component={FinanzasScreen} />
+      <Tab.Screen name="Cuentas" component={ObligacionesScreen} />
       <Tab.Screen name="Tareas" component={TareasScreen} />
       <Tab.Screen name="Calendario" component={CalendarioScreen} />
     </Tab.Navigator>

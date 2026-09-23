@@ -268,3 +268,45 @@ def calcular_intereses_pasivos() -> dict:
             "detalle_prestamos": detalle_prestamos,
             "detalle_tarjetas": detalle_tarjetas
         }
+
+def crear_tarjeta_credito(nombre: str, cupo_total: float, fecha_corte: int, fecha_pago: int, tasa_interes: Optional[float] = None) -> dict:
+    with Session(engine) as session:
+        tarjeta = TarjetaCredito(
+            nombre=nombre,
+            cupo_total=float(cupo_total),
+            fecha_corte=fecha_corte,
+            fecha_pago=fecha_pago,
+            tasa_interes=float(tasa_interes) if tasa_interes else None
+        )
+        session.add(tarjeta)
+        session.commit()
+        session.refresh(tarjeta)
+        return {"mensaje": f"Tarjeta '{nombre}' registrada exitosamente.", "id": tarjeta.id}
+
+def crear_prestamo(nombre: str, monto_total: float, saldo_pendiente: float, cuota_mensual: float, tasa_interes_mensual: float, fecha_pago_mensual: int) -> dict:
+    with Session(engine) as session:
+        prestamo = Prestamo(
+            nombre=nombre,
+            monto_total=float(monto_total),
+            saldo_pendiente=float(saldo_pendiente),
+            cuota_mensual=float(cuota_mensual),
+            tasa_interes_mensual=float(tasa_interes_mensual),
+            fecha_pago_mensual=fecha_pago_mensual
+        )
+        session.add(prestamo)
+        session.commit()
+        session.refresh(prestamo)
+        return {"mensaje": f"Préstamo '{nombre}' registrado exitosamente.", "id": prestamo.id}
+
+def crear_gasto_fijo(nombre: str, monto: float, dia_pago: int, categoria: str) -> dict:
+    with Session(engine) as session:
+        gasto = GastoFijo(
+            nombre=nombre,
+            monto=float(monto),
+            dia_pago=dia_pago,
+            categoria=categoria
+        )
+        session.add(gasto)
+        session.commit()
+        session.refresh(gasto)
+        return {"mensaje": f"Gasto fijo '{nombre}' registrado exitosamente.", "id": gasto.id}
