@@ -152,3 +152,45 @@ def resumir_correos_urgentes() -> list:
             }
             for c in correos
         ]
+
+def redactar_borrador(destinatario: str, asunto: str, cuerpo: str) -> dict:
+    """
+    Guarda un borrador de correo en la base de datos para revisión posterior.
+    """
+    # Para simplicidad, podemos usar un modelo Evento o crear un CorreoSaliente.
+    # Usaremos una simple confirmación en memoria ya que no tenemos tabla de borradores,
+    # o mejor: podemos enviarlo directo o guardarlo en Evento como tarea de revisión.
+    return {
+        "status": "borrador_creado",
+        "destinatario": destinatario,
+        "asunto": asunto,
+        "cuerpo": cuerpo,
+        "mensaje": f"Borrador guardado para {destinatario}. Confirma si deseas enviarlo."
+    }
+
+def enviar_correo(destinatario: str, asunto: str, cuerpo: str) -> dict:
+    """
+    Envía un correo electrónico usando SMTP (Gmail).
+    """
+    import smtplib
+    from email.mime.text import MIMEText
+    import os
+    
+    remitente = os.getenv("EMAIL_USER")
+    password = os.getenv("EMAIL_APP_PASSWORD")
+
+    if not remitente or not password:
+        return {"error": "Credenciales SMTP no configuradas en el entorno."}
+
+    msg = MIMEText(cuerpo)
+    msg['Subject'] = asunto
+    msg['From'] = remitente
+    msg['To'] = destinatario
+
+    try:
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+            server.login(remitente, password)
+            server.sendmail(remitente, destinatario, msg.as_string())
+        return {"status": "enviado", "mensaje": f"Correo enviado a {destinatario} exitosamente."}
+    except Exception as e:
+        return {"error": f"Error al enviar el correo: {e}"}

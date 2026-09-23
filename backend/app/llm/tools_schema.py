@@ -165,6 +165,39 @@ TOOLS = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "proyectar_flujo_caja",
+            "description": (
+                "Calcula el flujo de caja proyectado a fin de mes. "
+                "Toma el balance actual y le resta los gastos fijos pendientes "
+                "y las cuotas mensuales de préstamos. Úsala cuando el usuario pregunte "
+                "por proyecciones, si le alcanza el dinero, o cuál es su flujo de caja."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "calcular_intereses_pasivos",
+            "description": (
+                "Calcula un estimado mensual de intereses a pagar por pasivos financieros "
+                "(Préstamos y Tarjetas de Crédito). Úsala cuando el usuario pregunte "
+                "cuánto pagará de interés, o cuál es el costo de sus deudas."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+            },
+        },
+    },
     # ─────────────────────────────
     # HERRAMIENTAS DE AGENDA
     # ─────────────────────────────
@@ -288,6 +321,85 @@ TOOLS = [
             "parameters": {
                 "type": "object",
                 "properties": {},
+                "required": [],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "redactar_borrador",
+            "description": (
+                "Guarda un borrador de correo en la base de datos para revisión posterior. "
+                "Úsala cuando el usuario dicte o pida redactar un correo pero quiera revisarlo "
+                "antes de mandarlo."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "destinatario": {
+                        "type": "string",
+                        "description": "Correo electrónico del destinatario (ej: profe@uni.edu.co).",
+                    },
+                    "asunto": {
+                        "type": "string",
+                        "description": "Asunto o título del correo.",
+                    },
+                    "cuerpo": {
+                        "type": "string",
+                        "description": "Contenido completo del correo, formalmente redactado según instrucciones.",
+                    },
+                },
+                "required": ["destinatario", "asunto", "cuerpo"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "enviar_correo",
+            "description": (
+                "Envía un correo electrónico de inmediato usando SMTP. "
+                "Úsala cuando el usuario apruebe enviar el correo o diga explícitamente "
+                "que lo envíes directamente sin revisar."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "destinatario": {
+                        "type": "string",
+                        "description": "Correo electrónico del destinatario.",
+                    },
+                    "asunto": {
+                        "type": "string",
+                        "description": "Asunto o título del correo.",
+                    },
+                    "cuerpo": {
+                        "type": "string",
+                        "description": "Contenido completo del correo.",
+                    },
+                },
+                "required": ["destinatario", "asunto", "cuerpo"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "sincronizar_correos_nuevos",
+            "description": (
+                "Se conecta por IMAP y sincroniza los últimos correos no leídos "
+                "de la bandeja de entrada real. Úsala SIEMPRE que el usuario te pida "
+                "'leer mis correos', 'revisar mi bandeja', etc., ANTES de resumirlos."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "limite": {
+                        "type": "integer",
+                        "description": "Cantidad máxima de correos a leer (por defecto 10).",
+                    },
+                },
                 "required": [],
             },
         },

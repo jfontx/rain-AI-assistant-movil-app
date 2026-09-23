@@ -90,3 +90,23 @@ class TarjetaCredito(SQLModel, table=True):
     fecha_corte: int
     fecha_pago: int
     tasa_interes: Optional[float] = None
+
+
+class Prestamo(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    nombre: str
+    monto_total: float
+    saldo_pendiente: float
+    cuota_mensual: float
+    tasa_interes_mensual: float
+    fecha_pago_mensual: int
+    fecha_desembolso: Optional[datetime] = None
+
+
+class GastoFijo(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    nombre: str
+    monto: float
+    dia_pago: int
+    categoria: str
+    activo: bool = True

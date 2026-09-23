@@ -8,7 +8,7 @@ from sqlmodel import Session, select
 
 from app.db.models import (
     Transaccion, TipoTransaccion, Origen,
-    MetaAhorro, TarjetaCredito,
+    MetaAhorro, TarjetaCredito, Prestamo, GastoFijo
 )
 from app.db.session import engine
 
@@ -188,4 +188,83 @@ def consultar_tarjeta(nombre: str) -> dict:
             "fecha_corte": tarjeta.fecha_corte,
             "fecha_pago": tarjeta.fecha_pago,
             "tasa_interes": tarjeta.tasa_interes,
+        }
+
+def proyectar_flujo_caja() -> dict:
+    """
+    Calcula el flujo de caja proyectado a fin de mes.
+    Toma el balance actual y le resta las obligaciones (Gastos Fijos activos).
+    """
+    with Session(engine) as session:
+        # Calcular balance actual
+        transacciones = session.exec(select(Transaccion)).all()
+        ingresos = sum(t.monto for t in transacciones if t.tipo == TipoTransaccion.ingreso)
+        gastos = sum(t.monto for t in transacciones if t.tipo == TipoTransaccion.gasto)
+        balance_actual = ingresos - gastos
+
+        # Sumar gastos fijos activos
+        gastos_fijos = session.exec(select(GastoFijo).where(GastoFijo.activo == True)).all()
+        total_obligaciones = sum(gf.monto for gf in gastos_fijos)
+
+        # También sumar cuotas mensuales de préstamos
+        prestamos = session.exec(select(Prestamo)).all()
+        cuotas_prestamos = sum(p.cuota_mensual for p in prestamos if p.saldo_pendiente > 0)
+        
+        total_obligaciones += cuotas_prestamos
+
+        proyeccion_fin_de_mes = balance_actual - total_obligaciones
+
+        return {
+            "balance_actual": balance_actual,
+            "total_obligaciones_pendientes": total_obligaciones,
+            "detalle_obligaciones": {
+                "gastos_fijos": [{"nombre": gf.nombre, "monto": gf.monto} for gf in gastos_fijos],
+                "cuotas_prestamos": [{"nombre": p.nombre, "monto": p.cuota_mensual} for p in prestamos if p.saldo_pendiente > 0]
+            },
+            "balance_proyectado_fin_de_mes": proyeccion_fin_de_mes,
+        }
+
+def calcular_intereses_pasivos() -> dict:
+    """
+    Calcula un estimado de intereses a pagar por pasivos financieros (Tarjetas de Crédito y Préstamos).
+    """
+    with Session(engine) as session:
+        # Intereses de préstamos
+        prestamos = session.exec(select(Prestamo).where(Prestamo.saldo_pendiente > 0)).all()
+        detalle_prestamos = []
+        total_intereses_prestamos = 0.0
+        
+        for p in prestamos:
+            # Fórmula de interés simple mensual sobre saldo
+            interes_mensual = p.saldo_pendiente * (p.tasa_interes_mensual / 100.0)
+            total_intereses_prestamos += interes_mensual
+            detalle_prestamos.append({
+                "nombre": p.nombre,
+                "saldo_pendiente": p.saldo_pendiente,
+                "tasa_interes": p.tasa_interes_mensual,
+                "interes_mensual_estimado": interes_mensual
+            })
+
+        # Intereses de tarjetas (asumiendo que pagan interés sobre el saldo utilizado)
+        tarjetas = session.exec(select(TarjetaCredito).where(TarjetaCredito.cupo_utilizado > 0)).all()
+        detalle_tarjetas = []
+        total_intereses_tarjetas = 0.0
+
+        for t in tarjetas:
+            if t.tasa_interes:
+                interes_mensual = t.cupo_utilizado * (t.tasa_interes / 100.0)
+                total_intereses_tarjetas += interes_mensual
+                detalle_tarjetas.append({
+                    "nombre": t.nombre,
+                    "cupo_utilizado": t.cupo_utilizado,
+                    "tasa_interes": t.tasa_interes,
+                    "interes_mensual_estimado": interes_mensual
+                })
+
+        return {
+            "intereses_prestamos": total_intereses_prestamos,
+            "intereses_tarjetas": total_intereses_tarjetas,
+            "total_intereses_estimados": total_intereses_prestamos + total_intereses_tarjetas,
+            "detalle_prestamos": detalle_prestamos,
+            "detalle_tarjetas": detalle_tarjetas
         }
