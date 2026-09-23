@@ -6,7 +6,7 @@
  *    Puedes verla en la app de Tailscale en tu Mac o con el comando: tailscale ip -4
  *    Ejemplo: const BASE_URL = 'http://100.64.1.23:8000';
  */
-const BASE_URL = 'http://192.168.1.30:8000'; // WiFi local — no requiere Tailscale en iPhone
+const BASE_URL = 'http://100.101.159.17:8000'; // WiFi local — no requiere Tailscale en iPhone
 
 // ─────────────────────────────────────────────────
 // TIPOS
@@ -138,5 +138,15 @@ export interface MetaAhorro {
 export async function obtenerMetas(): Promise<MetaAhorro[]> {
   const resp = await fetch(`${BASE_URL}/api/metas/`);
   if (!resp.ok) throw new Error('Error obteniendo metas');
+  return resp.json();
+}
+
+export async function crearMeta(datos: { nombre: string; monto_objetivo: number }): Promise<MetaAhorro> {
+  const resp = await fetch(`${BASE_URL}/api/metas/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(datos),
+  });
+  if (!resp.ok) throw new Error('Error creando meta');
   return resp.json();
 }

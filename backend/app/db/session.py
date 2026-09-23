@@ -4,14 +4,30 @@ Configuración del motor SQLite y session de base de datos.
 from sqlmodel import SQLModel, create_engine, Session
 from typing import Generator
 
-# Base de datos SQLite local — archivo raín.db en la carpeta backend/
-SQLITE_URL = "sqlite:///./raín.db"
+import os
+from dotenv import load_dotenv
 
-engine = create_engine(
-    SQLITE_URL,
-    echo=False,
-    connect_args={"check_same_thread": False},  # necesario para SQLite + FastAPI async
-)
+load_dotenv()  # Cargar variables del .env si existe
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+if DATABASE_URL:
+    print("✅ Conectando a Supabase (PostgreSQL)")
+    # Supabase / PostgreSQL
+    engine = create_engine(
+        DATABASE_URL,
+        echo=False,
+        pool_pre_ping=True,  # Importante para conexiones remotas
+    )
+else:
+    print("⚠️  DATABASE_URL no encontrada, usando SQLite local como fallback")
+    # Base de datos SQLite local (fallback)
+    SQLITE_URL = "sqlite:///./raín.db"
+    engine = create_engine(
+        SQLITE_URL,
+        echo=False,
+        connect_args={"check_same_thread": False},  # necesario para SQLite
+    )
 
 
 def create_db_and_tables():

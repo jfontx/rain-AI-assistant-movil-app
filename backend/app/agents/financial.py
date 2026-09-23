@@ -112,6 +112,29 @@ def consultar_meta(nombre: str) -> dict:
         }
 
 
+def crear_meta(nombre: str, monto_objetivo: float) -> dict:
+    """
+    Crea una nueva meta de ahorro en la base de datos.
+    """
+    with Session(engine) as session:
+        meta = MetaAhorro(
+            nombre=nombre,
+            monto_objetivo=float(monto_objetivo),
+            monto_actual=0.0
+        )
+        session.add(meta)
+        session.commit()
+        session.refresh(meta)
+
+        return {
+            "id": meta.id,
+            "nombre": meta.nombre,
+            "monto_objetivo": meta.monto_objetivo,
+            "monto_actual": meta.monto_actual,
+            "mensaje": f"Meta '{nombre}' creada exitosamente."
+        }
+
+
 def actualizar_meta(nombre: str, monto_abonado: float) -> dict:
     """
     Abona un monto a una meta de ahorro existente.

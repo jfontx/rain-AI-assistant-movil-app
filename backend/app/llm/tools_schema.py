@@ -123,6 +123,30 @@ TOOLS = [
     {
         "type": "function",
         "function": {
+            "name": "crear_meta",
+            "description": (
+                "Crea una nueva meta de ahorro. "
+                "Úsala cuando el usuario pida explícitamente crear una meta, apartar dinero para un propósito nuevo, o ahorrar para algo nuevo."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "nombre": {
+                        "type": "string",
+                        "description": "Nombre o propósito de la meta de ahorro (ej: Viaje a Japón, Computador nuevo).",
+                    },
+                    "monto_objetivo": {
+                        "type": "number",
+                        "description": "Monto total objetivo en pesos colombianos (COP) que se quiere alcanzar.",
+                    },
+                },
+                "required": ["nombre", "monto_objetivo"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "consultar_tarjeta",
             "description": (
                 "Consulta el cupo disponible y fechas de una tarjeta de crédito. "

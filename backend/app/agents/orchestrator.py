@@ -20,6 +20,7 @@ FUNCIONES_DISPONIBLES: dict[str, Any] = {
     # Financieras
     "registrar_transaccion": financial.registrar_transaccion,
     "consultar_balance": financial.consultar_balance,
+    "crear_meta": financial.crear_meta,
     "consultar_meta": financial.consultar_meta,
     "actualizar_meta": financial.actualizar_meta,
     "consultar_tarjeta": financial.consultar_tarjeta,

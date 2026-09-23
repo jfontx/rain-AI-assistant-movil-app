@@ -33,7 +33,17 @@ EMAIL_USER=tu_correo@gmail.com
 EMAIL_APP_PASSWORD=xxxx xxxx xxxx xxxx   # App Password de Google
 OLLAMA_MODEL=llama3.2
 OLLAMA_BASE_URL=http://localhost:11434
+
+# Base de datos Supabase (PostgreSQL)
+# Si no proporcionas esto, se creará un archivo SQLite local automáticamente
+DATABASE_URL=postgresql://postgres.[tu_proyecto]:[tu_password]@aws-0-[region].pooler.supabase.com:6543/postgres
 ```
+
+### Cómo obtener el Connection String de Supabase
+1. Entra a tu proyecto en [Supabase](https://supabase.com).
+2. Ve a **Project Settings** -> **Database**.
+3. En la sección **Connection string**, selecciona la pestaña **URI** y desmarca **Use connection pooling** o usa el puerto 6543 si mantienes el pooling activado.
+4. Reemplaza `[YOUR-PASSWORD]` por la contraseña de la base de datos de tu proyecto.
 
 ### Cómo obtener el App Password de Gmail
 1. Ve a [myaccount.google.com](https://myaccount.google.com)
