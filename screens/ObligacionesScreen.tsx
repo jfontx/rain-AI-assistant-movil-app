@@ -59,7 +59,7 @@ export default function ObligacionesScreen() {
   const [formFijo, setFormFijo] = useState({ nombre: '', monto: '', dia_pago: '', categoria: 'servicios' });
 
   const cargarDatos = useCallback(async () => {
-    setCargando(true);
+    if (tarjetas.length === 0 && prestamos.length === 0 && fijos.length === 0) setCargando(true);
     try {
       const [datosT, datosP, datosF] = await Promise.all([
         obtenerTarjetas(),

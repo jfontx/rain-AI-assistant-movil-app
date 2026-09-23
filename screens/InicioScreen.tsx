@@ -24,7 +24,7 @@ export default function InicioScreen() {
   }, [isFocused]);
 
   const cargarDatos = async () => {
-    setCargando(true);
+    if (tareasUrgentes.length === 0 && balanceMes === 0) setCargando(true);
     try {
       // Calcular balance del mes
       const txs = await obtenerTransacciones();

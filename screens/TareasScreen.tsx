@@ -35,16 +35,35 @@ export default function TareasScreen() {
   const [activeTab, setActiveTab] = useState<TabType>('pendiente');
   const [activeCategoria, setActiveCategoria] = useState<string>('Todas');
   
+  const getDefaultDate = () => {
+    const d = new Date();
+    d.setHours(d.getHours() + 1);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const h = String(d.getHours()).padStart(2, '0');
+    const min = String(d.getMinutes()).padStart(2, '0');
+    return `${y}-${m}-${day}T${h}:${min}`;
+  };
+
   const [form, setForm] = useState({
     titulo: '',
-    fecha_inicio: new Date(Date.now() + 86400000).toISOString().slice(0, 16),
+    fecha_inicio: getDefaultDate(),
     prioridad: 'media' as 'baja' | 'media' | 'alta',
     categoria: '',
     notas: '',
   });
 
+  const resetForm = () => setForm({
+    titulo: '',
+    fecha_inicio: getDefaultDate(),
+    prioridad: 'media',
+    categoria: '',
+    notas: '',
+  });
+
   const cargarTareas = useCallback(async () => {
-    setCargando(true);
+    if (tareas.length === 0) setCargando(true);
     try {
       const datos = await obtenerEventos('tarea');
       setTareas(datos);
@@ -101,7 +120,7 @@ export default function TareasScreen() {
         notas: form.notas || undefined,
       });
       setModalVisible(false);
-      setForm({ titulo: '', fecha_inicio: new Date(Date.now() + 86400000).toISOString().slice(0, 16), prioridad: 'media', categoria: '', notas: '' });
+      resetForm();
       cargarTareas();
     } catch {
       Alert.alert('Error', 'No se pudo guardar la tarea');

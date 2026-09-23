@@ -2,8 +2,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import {
   View, Text, FlatList, TouchableOpacity, TextInput,
-  StyleSheet, Alert, SafeAreaView, RefreshControl, Modal, Keyboard, TouchableWithoutFeedback, KeyboardAvoidingView, Platform
+  StyleSheet, Alert, RefreshControl, Modal, Keyboard, TouchableWithoutFeedback, KeyboardAvoidingView, Platform
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../context/ThemeContext';
 import { theme as staticTheme } from '../theme';
 import FloatingMicrophone from '../components/FloatingMicrophone';
@@ -93,7 +94,7 @@ export default function CalendarioScreen() {
   };
 
   const cargarEventos = useCallback(async () => {
-    setCargando(true);
+    if (eventos.length === 0) setCargando(true);
     try {
       const datos = await obtenerEventos();
       setEventos(datos.sort((a, b) => new Date(a.fecha_inicio).getTime() - new Date(b.fecha_inicio).getTime()));
@@ -160,6 +161,7 @@ export default function CalendarioScreen() {
       </View>
 
       <FlatList
+        style={{ flex: 1 }}
         data={eventos.filter(e => getFormatDate(new Date(e.fecha_inicio)) === fechaSeleccionada)}
         keyExtractor={item => String(item.id)}
         refreshControl={<RefreshControl refreshing={cargando} onRefresh={cargarEventos} tintColor={theme.colors.primary} />}
@@ -249,7 +251,7 @@ const createStyles = (theme: any) => StyleSheet.create({
   headerTitulo: { fontFamily: theme.typography.fontFamily.bold, color: theme.colors.onSurface, fontSize: theme.typography.display.fontSize },
   headerSub: { fontFamily: theme.typography.fontFamily.medium, color: theme.colors.onSurfaceVariant, fontSize: theme.typography.bodyMd.fontSize, marginTop: 4 },
   
-  lista: { padding: theme.spacing.margin, paddingBottom: 100 },
+  lista: { paddingHorizontal: theme.spacing.margin, paddingTop: theme.spacing.margin, paddingBottom: 150 },
   vacioContenedor: { alignItems: 'center', marginTop: 80 },
   textoVacio: { fontFamily: theme.typography.fontFamily.regular, textAlign: 'center', color: theme.colors.outline, fontSize: theme.typography.bodyMd.fontSize, lineHeight: 24 },
   
@@ -268,7 +270,7 @@ const createStyles = (theme: any) => StyleSheet.create({
   hora: { fontFamily: theme.typography.fontFamily.bold, color: theme.colors.onSurface, fontSize: theme.typography.labelLg.fontSize },
   horaFin: { fontFamily: theme.typography.fontFamily.medium, color: theme.colors.onSurfaceVariant, fontSize: theme.typography.labelMd.fontSize, marginTop: 2 },
   
-  lineaTiempo: { width: 4, borderRadius: theme.roundness.full, minHeight: '100%', marginTop: 4 },
+  lineaTiempo: { width: 4, borderRadius: theme.roundness.full, alignSelf: 'stretch', marginTop: 4 },
   
   contenidoEvento: { flex: 1, backgroundColor: theme.colors.surface, borderRadius: theme.roundness.xl, padding: theme.spacing.md, borderWidth: 1, borderColor: theme.colors.surfaceVariant },
   filaTitulo: { flexDirection: 'row', alignItems: 'flex-start', gap: theme.spacing.sm },

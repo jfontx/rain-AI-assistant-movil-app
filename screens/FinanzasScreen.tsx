@@ -59,7 +59,7 @@ export default function FinanzasScreen() {
   const [formMeta, setFormMeta] = useState({ nombre: '', monto_objetivo: '' });
 
   const cargarDatos = useCallback(async () => {
-    setCargando(true);
+    if (transacciones.length === 0 && metas.length === 0) setCargando(true);
     try {
       const [datosTxs, datosMetas] = await Promise.all([
         obtenerTransacciones(),
